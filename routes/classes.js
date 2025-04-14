@@ -8,7 +8,6 @@ import {
   deleteClass
 } from '../controllers/classController.js';
 import { authenticate } from '../middleware/auth.js';
-import { isPrincipal } from '../middleware/roleCheck.js';
 
 const router = express.Router();
 
@@ -25,16 +24,16 @@ router.get('/:id', authenticate, getClassById);
 // @route   POST /api/classes
 // @desc    Create a new class
 // @access  Private/Principal
-router.post('/', authenticate, isPrincipal, createClass);
+router.post('/', authenticate, createClass);
 
 // @route   PUT /api/classes/:id
 // @desc    Update a class
 // @access  Private/Principal
-router.put('/:id', authenticate, isPrincipal, updateClass);
+router.put('/:id', authenticate, updateClass);
 
 // @route   DELETE /api/classes/:id
 // @desc    Delete a class
 // @access  Private/Principal
-router.delete('/:id', authenticate, isPrincipal, deleteClass);
+router.delete('/:id', authenticate, deleteClass);
 
 export default router;

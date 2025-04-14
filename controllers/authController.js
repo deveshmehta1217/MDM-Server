@@ -3,25 +3,19 @@ import User from '../models/User.js';
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, id, password } = req.body;
     
     // Check if user already exists
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ id });
     if (user) {
       return res.status(400).json({ message: 'User already exists' });
-    }
-    
-    // For security, only allow principal registration through a secure channel
-    if (role === 'principal') {
-      // Additional checks can be added here
     }
     
     // Create new user
     user = new User({
       name,
-      email,
+      id,
       password,
-      role
     });
     
     await user.save();
@@ -32,10 +26,9 @@ export const register = async (req, res) => {
     res.status(201).json({
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
-        email: user.email,
-        role: user.role
+        id: user.id,
       }
     });
   } catch (error) {
@@ -45,11 +38,11 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log(email, password)
+    const { id, password } = req.body;
+    console.log(id, password)
     
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ id });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -66,11 +59,9 @@ export const login = async (req, res) => {
     res.json({
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
-        email: user.email,
-        role: user.role,
-        assignedClass: user.assignedClass
+        id: user.id,
       }
     });
   } catch (error) {

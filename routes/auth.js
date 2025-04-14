@@ -2,7 +2,6 @@
 import express from 'express';
 import { register, login, getProfile } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
-import { isPrincipal } from '../middleware/roleCheck.js';
 
 const router = express.Router();
 

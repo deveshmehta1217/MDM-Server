@@ -9,7 +9,6 @@ import {
   bulkAddTeachers
 } from '../controllers/userController.js';
 import { authenticate } from '../middleware/auth.js';
-import { isPrincipal } from '../middleware/roleCheck.js';
 
 const router = express.Router();
 
@@ -28,22 +27,22 @@ const upload = multer({ storage });
 // @route   GET /api/users/teachers
 // @desc    Get all teachers
 // @access  Private/Principal
-router.get('/teachers', authenticate, isPrincipal, getAllTeachers);
+router.get('/teachers', authenticate, getAllTeachers);
 
 // @route   POST /api/users/teachers
 // @desc    Create a new teacher
 // @access  Private/Principal
-router.post('/teachers', authenticate, isPrincipal, createTeacher);
+router.post('/teachers', authenticate, createTeacher);
 
 // @route   PUT /api/users/teachers/:id
 // @desc    Update a teacher
 // @access  Private/Principal
-router.put('/teachers/:id', authenticate, isPrincipal, updateTeacher);
+router.put('/teachers/:id', authenticate, updateTeacher);
 
 // @route   DELETE /api/users/teachers/:id
 // @desc    Delete a teacher
 // @access  Private/Principal
-router.delete('/teachers/:id', authenticate, isPrincipal, deleteTeacher);
+router.delete('/teachers/:id', authenticate, deleteTeacher);
 
 // @route   POST /api/users/teachers/bulk
 // @desc    Bulk upload teachers from Excel
@@ -51,7 +50,6 @@ router.delete('/teachers/:id', authenticate, isPrincipal, deleteTeacher);
 router.post(
   '/teachers/bulk',
   authenticate,
-  isPrincipal,
   upload.single('file'),
   bulkAddTeachers
 );
