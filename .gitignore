@@ -1,2 +1,5 @@
 node_modules
 .env
+React-Native
+uploads/*
+!uploads/.gitkeep

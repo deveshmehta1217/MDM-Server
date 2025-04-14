@@ -25,9 +25,6 @@ const UserSchema = new mongoose.Schema({
   assignedClass: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Class',
-    required: function() {
-      return this.role === 'teacher';
-    }
   },
   createdAt: {
     type: Date,

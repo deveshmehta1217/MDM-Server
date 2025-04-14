@@ -152,9 +152,17 @@ export const deleteStudent = async (req, res) => {
 
 export const bulkAddStudents = async (req, res) => {
   try {
+    const { classId } = req.params;
     const file = req.file;
+
     if (!file) {
       return res.status(400).json({ message: 'Please upload an Excel file' });
+    }
+    console.log(file)
+    // Verify class exists
+    const classObj = await Class.findById(classId);
+    if (!classObj) {
+      return res.status(404).json({ message: 'Class not found' });
     }
     
     // Parse Excel file
@@ -163,30 +171,10 @@ export const bulkAddStudents = async (req, res) => {
     // Validate and prepare student data
     const studentPromises = students.map(async student => {
       try {
-        // Find the class
-        let classObj;
-        if (student.classId) {
-          classObj = await Class.findById(student.classId);
-        } else if (student.standard && student.division) {
-          classObj = await Class.findOne({ 
-            standard: student.standard, 
-            division: student.division 
-          });
-        }
-        
-        if (!classObj) {
-          return { 
-            status: 'failed', 
-            name: student.name, 
-            rollNumber: student.rollNumber,
-            reason: 'Class not found' 
-          };
-        }
-        
         // Check if student with same roll number exists in the class
         const existingStudent = await Student.findOne({ 
           rollNumber: student.rollNumber, 
-          class: classObj._id 
+          class: classId 
         });
         
         if (existingStudent) {
@@ -204,7 +192,7 @@ export const bulkAddStudents = async (req, res) => {
           rollNumber: student.rollNumber,
           gender: student.gender,
           category: student.category,
-          class: classObj._id
+          class: classId
         });
         
         await newStudent.save();
@@ -224,11 +212,11 @@ export const bulkAddStudents = async (req, res) => {
       }
     });
     
-    // Continue from studentController.js - bulkAddStudents
     const results = await Promise.all(studentPromises);
     
     res.json({
       message: 'Bulk student import completed',
+      class: `${classObj.standard}-${classObj.division}`,
       results
     });
   } catch (error) {

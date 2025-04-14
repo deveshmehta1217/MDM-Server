@@ -51,12 +51,13 @@ router.put('/:id', authenticate, isAssignedTeacher, updateStudent);
 // @access  Private
 router.delete('/:id', authenticate, isAssignedTeacher, deleteStudent);
 
-// @route   POST /api/students/bulk
-// @desc    Bulk upload students from Excel
+// @route   POST /api/students/bulk/:classId
+// @desc    Bulk upload students for specific class from Excel
 // @access  Private
 router.post(
-  '/bulk',
+  '/bulk/:classId',
   authenticate,
+  isAssignedTeacher,
   upload.single('file'),
   bulkAddStudents
 );
