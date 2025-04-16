@@ -20,6 +20,7 @@ if (!fs.existsSync(uploadDir)) {
 // Import routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/registeredStudents.js';
+import attendanceRoutes from './routes/attendance.js';
 
 // Import passport config
 import configurePassport from './config/passport.js';
@@ -42,6 +43,7 @@ configurePassport(passport);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/registered', userRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
