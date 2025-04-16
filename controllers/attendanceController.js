@@ -2,6 +2,14 @@ import Attendance from '../models/Attendace.js';
 import ExcelJS from 'exceljs';
 import path from 'path';
 import puppeteer from 'puppeteer';
+import fs from 'fs';
+
+const encodeImageToBase64 = (filePath) => {
+    const ext = path.extname(filePath).substring(1); // e.g. 'png'
+    const base64 = fs.readFileSync(filePath, { encoding: 'base64' });
+    return `data:image/${ext};base64,${base64}`;
+};
+
 
 export const getAttendance = async (req, res) => {
     try {
@@ -551,9 +559,9 @@ export const downloadDailyReportPDF = async (req, res) => {
 
         // Add grand total after all
         tableRows += `<tr style="font-weight: bold;">${['કુલ', ...grandTotal.map(v => v || ''), ''].map(cell => `<td>${cell}</td>`).join('')}</tr>`;
-        
+
         // Add the logo URL
-        const logoUrl = 'file://' + path.resolve('./assets/logo.png');
+        const logoBase64 = encodeImageToBase64(path.resolve('./assets/logo.png'));
 
         const finalHTML = `
 <!DOCTYPE html>
@@ -617,13 +625,14 @@ export const downloadDailyReportPDF = async (req, res) => {
   </style>
 </head>
 <body>
-  <div style="display: flex; align-items: center; justify-content: space-between;">
-    <img src="${logoUrl}" alt="logo" width="100" />
-    <div style="flex: 1; text-align: center;">
-      <div class="header">ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)<br>ન. પ્રા. બાબાજીપુરા શાળા નં. 20</div>
-      <div class="subheader">મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક</div>
+  <div style="position: relative; text-align: center; margin-bottom: 20px;">
+    <img src="${logoBase64}" alt="logo" style="position: absolute; left: 0; top: 0; width: 100px;" />
+    <div>
+        <div class="header">ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)<br>ન. પ્રા. બાબાજીપુરા શાળા નં. 20</div>
+        <div class="subheader">મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક</div>
     </div>
-  </div>
+    </div>
+
 
   <div class="date">તારીખ : ${queryDate.toLocaleDateString('en-IN')}</div>
 
