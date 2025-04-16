@@ -1,9 +1,7 @@
 import Attendance from '../models/Attendace.js';
 import ExcelJS from 'exceljs';
-import fs from 'fs';
 import path from 'path';
-import PDFDocument from 'pdfkit';
-import moment from 'moment';
+import puppeteer from 'puppeteer';
 
 export const getAttendance = async (req, res) => {
     try {
@@ -405,19 +403,19 @@ export const downloadDailyReportExcel = async (req, res) => {
         noteCell.value = 'પ્રયોજક શિક્ષકની સહી: __________________________';
         noteCell.font = { italic: true };
         noteCell.height = 30;
-        
-        
+
+
         noteCell.border = {
             top: undefined,
             left: undefined,
             bottom: undefined,
             right: undefined
         };
-        
+
         const finalRowNumber = lastRowNumber + 3;
         sheet.mergeCells(`A${finalRowNumber}:AF${finalRowNumber}`);
         const finalCell = sheet.getCell(`A${finalRowNumber}`);
-        
+
         const timestamp = new Date().toLocaleString('en-IN', {
             day: '2-digit',
             month: '2-digit',
@@ -435,7 +433,7 @@ export const downloadDailyReportExcel = async (req, res) => {
             bottom: undefined,
             right: undefined
         };
-        
+
         // Apply global font (Shruti) and small padding to all cells
         sheet.eachRow({ includeEmpty: true }, (row) => {
             row.eachCell({ includeEmpty: true }, (cell) => {
@@ -471,133 +469,213 @@ export const downloadDailyReportPDF = async (req, res) => {
         const queryDate = new Date(date);
         const data = await Attendance.find({ date: queryDate }).sort({ standard: 1 });
 
-        const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+        const categoriesCode = ['sc', 'st', 'obc', 'general'];
+
+        const totalStd1to4 = Array(30).fill(0);
+        const totalStd5to8 = Array(30).fill(0);
+        const grandTotal = Array(30).fill(0);
+
+        const rows = [];
+
+        data.forEach((record, idx) => {
+            const rowData = [];
+            rowData.push(`${record.standard}-${record.division}`);
+            const sum = { male: 0, female: 0 };
+
+            categoriesCode.forEach((category) => {
+                rowData.push(record.registeredStudents[category].male);
+                rowData.push(record.registeredStudents[category].female);
+                sum.male += record.registeredStudents[category].male;
+                sum.female += record.registeredStudents[category].female;
+            });
+            rowData.push(sum.male, sum.female);
+
+            sum.male = 0;
+            sum.female = 0;
+            categoriesCode.forEach((category) => {
+                rowData.push(record.presentStudents[category].male);
+                rowData.push(record.presentStudents[category].female);
+                sum.male += record.presentStudents[category].male;
+                sum.female += record.presentStudents[category].female;
+            });
+            rowData.push(sum.male, sum.female);
+
+            sum.male = 0;
+            sum.female = 0;
+            categoriesCode.forEach((category) => {
+                rowData.push(record.mealTakenStudents[category].male);
+                rowData.push(record.mealTakenStudents[category].female);
+                sum.male += record.mealTakenStudents[category].male;
+                sum.female += record.mealTakenStudents[category].female;
+            });
+            rowData.push(sum.male, sum.female);
+            rowData.push(''); // Signature
+
+            rowData.slice(1).forEach((val, i) => {
+                if (typeof val === 'number') {
+                    if (record.standard <= 4) totalStd1to4[i] += val;
+                    if (record.standard >= 5) totalStd5to8[i] += val;
+                    grandTotal[i] += val;
+                }
+            });
+
+            rows.push(rowData);
+        });
+
+        const renderRow = (label, arr) => {
+            const tds = [label, ...arr.map((v) => (v === 0 ? '' : v)), ''];
+            return `<tr>${tds.map(v => `<td>${v}</td>`).join('')}</tr>`;
+        };
+
+        let tableRows = '';
+        let lastStandard = 0;
+
+        rows.forEach((row, idx) => {
+            const standard = parseInt(row[0].split('-')[0]);
+            tableRows += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+
+            const nextRow = rows[idx + 1];
+            const nextStandard = nextRow ? parseInt(nextRow[0].split('-')[0]) : null;
+
+            const insertTotalRow = (label, arr) =>
+                `<tr style="font-weight: bold;">${[label, ...arr.map(v => v || ''), ''].map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+
+            if (standard === 4 && (!nextStandard || nextStandard > 4)) {
+                tableRows += insertTotalRow('ધોરણ 1-4 કુલ', totalStd1to4);
+            }
+
+            if (standard === 8 && (!nextStandard || nextStandard > 8)) {
+                tableRows += insertTotalRow('ધોરણ 5-8 કુલ', totalStd5to8);
+            }
+        });
+
+        // Add grand total after all
+        tableRows += `<tr style="font-weight: bold;">${['કુલ', ...grandTotal.map(v => v || ''), ''].map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+        
+        // Add the logo URL
+        const logoUrl = 'file://' + path.resolve('./assets/logo.png');
+
+        const finalHTML = `
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @font-face {
+      font-family: 'Shruti';
+      src: url('file://${path.resolve('./assets/fonts/Shruti.ttf')}') format('truetype');
+    }
+
+    body {
+      font-family: 'Shruti', sans-serif;
+      padding: 20px;
+    }
+
+    .header {
+      font-weight: bold;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .subheader {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .date {
+      text-align: right;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      text-align: center;
+      padding: 3px;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-style: italic;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .timestamp {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 10px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <img src="${logoUrl}" alt="logo" width="100" />
+    <div style="flex: 1; text-align: center;">
+      <div class="header">ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)<br>ન. પ્રા. બાબાજીપુરા શાળા નં. 20</div>
+      <div class="subheader">મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક</div>
+    </div>
+  </div>
+
+  <div class="date">તારીખ : ${queryDate.toLocaleDateString('en-IN')}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="3">ધોરણ</th>
+        <th colspan="10">રજિસ્ટર સંખ્યા</th>
+        <th colspan="10">હાજર સંખ્યા</th>
+        <th colspan="10">ભોજન લાભાર્થી સંખ્યા</th>
+        <th rowspan="3" style="width: 150px;">વર્ગ શિક્ષકની સહી</th>
+      </tr>
+      <tr>
+        ${['SC', 'ST', 'OBC', 'GEN', 'કુલ'].map(cat => `<th colspan="2">${cat}</th>`).join('').repeat(3)}
+      </tr>
+      <tr>
+        ${Array(15).fill('<th>કુમાર</th><th>કન્યા</th>').join('')}
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows}
+    </tbody>
+  </table>
+
+  <div class="footer">પ્રયોજક શિક્ષકની સહી: __________________________</div>
+  <div class="timestamp">Digitally generated on ${new Date().toLocaleString('en-IN')}</div>
+</body>
+</html>`;
+
+        // Generate PDF using Puppeteer
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+
+        await page.setContent(finalHTML, { waitUntil: 'networkidle0' });
+
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+        });
+
+        await browser.close();
 
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader(
             'Content-Disposition',
             `attachment; filename*=UTF-8''${encodeURIComponent('દૈનિકહાજરીરિપોર્ટ.pdf')}`
         );
+        res.end(pdfBuffer);
 
-        doc.pipe(res);
-
-        // Load logo
-        const logoPath = path.resolve('./assets/logo.png');
-        if (fs.existsSync(logoPath)) {
-            doc.image(logoPath, 40, 20, { width: 80 });
-        }
-
-        // Header
-        doc.font('Helvetica-Bold').fontSize(16).text(
-            `ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)\nન. પ્રા. બાબાજીપુરા શાળા નં. 20`,
-            130,
-            30,
-            { align: 'center' }
-        );
-
-        doc.moveDown(0.5);
-        doc.fontSize(14).text(`મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક`, { align: 'center' });
-        doc.moveDown(0.5);
-        doc.fontSize(12).text(`તારીખ : ${moment(queryDate).format('DD/MM/YYYY')}`, {
-            align: 'right',
-        });
-
-        doc.moveDown(1);
-
-        const headers = [
-            'ધોરણ',
-            'રજિસ્ટર સંખ્યા (કુમાર/કન્યા)',
-            'હાજર સંખ્યા (કુમાર/કન્યા)',
-            'ભોજન લાભ (કુમાર/કન્યા)',
-            'સહી',
-        ];
-
-        const categoriesCode = ['sc', 'st', 'obc', 'general'];
-        const totalStd1to4 = Array(30).fill(0);
-        const totalStd5to8 = Array(30).fill(0);
-        const grandTotal = Array(30).fill(0);
-
-        const cellWidth = 60;
-        const lineHeight = 20;
-
-        const drawRow = (doc, y, rowData, isHeader = false, isBold = false) => {
-            let x = 40;
-            rowData.forEach((text, i) => {
-                doc
-                    .font(isBold ? 'Helvetica-Bold' : 'Helvetica')
-                    .fontSize(10)
-                    .text(String(text), x, y, {
-                        width: cellWidth,
-                        align: 'center',
-                    });
-                x += cellWidth;
-            });
-            doc.moveTo(40, y + lineHeight).lineTo(x, y + lineHeight).stroke();
-        };
-
-        let y = doc.y + 10;
-
-        // Header row
-        drawRow(doc, y, [
-            'ધોરણ',
-            'SC',
-            'ST',
-            'OBC',
-            'GEN',
-            'કુલ',
-            'SC',
-            'ST',
-            'OBC',
-            'GEN',
-            'કુલ',
-            'SC',
-            'ST',
-            'OBC',
-            'GEN',
-            'કુલ',
-            'સહી',
-        ], true, true);
-
-        y += lineHeight;
-
-        data.forEach((record, idx) => {
-            const row = [];
-            const stdLabel = `${record.standard}-${record.division}`;
-            row.push(stdLabel);
-
-            const section = [record.registeredStudents, record.presentStudents, record.mealTakenStudents];
-            section.forEach((group) => {
-                let maleTotal = 0;
-                let femaleTotal = 0;
-                categoriesCode.forEach(cat => {
-                    maleTotal += group[cat].male;
-                    femaleTotal += group[cat].female;
-                    row.push(`${group[cat].male}/${group[cat].female}`);
-                });
-                row.push(`${maleTotal}/${femaleTotal}`);
-            });
-
-            row.push('');
-
-            drawRow(doc, y, row);
-            y += lineHeight;
-
-            // Optionally calculate totals here, as done in Excel
-        });
-
-        y += 10;
-        doc.font('Helvetica-Oblique').fontSize(12).text('પ્રયોજક શિક્ષકની સહી: __________________________', 40, y, {
-            align: 'right',
-        });
-
-        y += 30;
-        doc.fontSize(10).text(`Digitally generated on ${moment().format('DD/MM/YYYY, h:mm A')}`, 40, y, {
-            align: 'center',
-        });
-
-        doc.end();
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'PDF Report generation failed.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'PDF generation failed.' });
     }
 };
