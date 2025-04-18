@@ -16,16 +16,6 @@ const AttendanceSchema = new mongoose.Schema({
         required: true,
         default: Date.now
     },
-    academicYear: {
-        type: String,
-        required: true,
-        default: () => {
-            const currYear = new Date().getFullYear();
-            const currMonth = new Date().getMonth();
-
-            return currMonth < 5 ? `${currYear - 1}-${currYear}` : `${currYear}-${currYear + 1}`;
-        }
-    },
     registeredStudents: {
         general: {
             male: {

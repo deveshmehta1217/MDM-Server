@@ -40,15 +40,15 @@ router.get('/report/excel/semi-monthly/:year/:month/:half', authenticate, downlo
 // @access  Private
 router.get('/report/custom/:startDate/:endDate', authenticate, getCustomRangeReport);
 
-// @route   GET /api/attendance/:academicYear
-// @desc    Get all attendance for given academic year
+// @route   GET /api/attendance/:date
+// @desc    Get all attendance for a specific date
 // @access  Private
-router.get('/:academicYear', authenticate, getAttendance);
+router.get('/:date', authenticate, getAttendance);
 
-// @route   GET /api/attendance/:academicYear/:standard/:division
-// @desc    Get attendance by class for given academic year
+// @route   GET /api/attendance/:date/:standard/:division
+// @desc    Get attendance by class for a specific date
 // @access  Private
-router.get('/:academicYear/:standard/:division', authenticate, getAttendanceByClass);
+router.get('/:date/:standard/:division', authenticate, getAttendanceByClass);
 
 // @route   POST /api/attendance
 // @desc    Create a new attendance record
@@ -64,7 +64,5 @@ router.put('/:id', authenticate, updateAttendance);
 // @desc    Create or update attendance record
 // @access  Private
 router.post('/save', authenticate, saveAttendance);
-
-
 
 export default router;

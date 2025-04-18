@@ -13,8 +13,9 @@ const encodeImageToBase64 = (filePath) => {
 
 export const getAttendance = async (req, res) => {
     try {
-        const { academicYear } = req.params;
-        const data = await Attendance.find({ academicYear });
+        const { date } = req.params;
+        const formattedDate = new Date(date).toISOString().split('T')[0];
+        const data = await Attendance.find({ date: formattedDate });
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -23,11 +24,12 @@ export const getAttendance = async (req, res) => {
 
 export const getAttendanceByClass = async (req, res) => {
     try {
-        const { standard, division, academicYear } = req.params;
+        const { standard, division, date } = req.params;
+        const formattedDate = new Date(date).toISOString().split('T')[0];
         const data = await Attendance.findOne({
             standard: parseInt(standard),
             division,
-            academicYear
+            date: formattedDate
         });
         res.status(200).json(data);
     } catch (error) {
@@ -37,14 +39,15 @@ export const getAttendanceByClass = async (req, res) => {
 
 export const createAttendance = async (req, res) => {
     try {
-        const { standard, division, academicYear, registeredStudents, presentStudents, mealTakenStudents } = req.body;
-        if (!academicYear) {
-            return res.status(400).json({ message: 'Academic year is required' });
+        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
+        if (!date) {
+            return res.status(400).json({ message: 'Date is required' });
         }
+        const formattedDate = new Date(date).toISOString().split('T')[0];
         const data = await Attendance.create({
             standard: parseInt(standard),
             division,
-            academicYear,
+            date: formattedDate,
             registeredStudents,
             presentStudents,
             mealTakenStudents
@@ -58,14 +61,15 @@ export const createAttendance = async (req, res) => {
 export const updateAttendance = async (req, res) => {
     try {
         const { id } = req.params;
-        const { standard, division, academicYear, registeredStudents, presentStudents, mealTakenStudents } = req.body;
-        if (!academicYear) {
-            return res.status(400).json({ message: 'Academic year is required' });
+        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
+        if (!date) {
+            return res.status(400).json({ message: 'Date is required' });
         }
+        const formattedDate = new Date(date).toISOString().split('T')[0];
         const data = await Attendance.findByIdAndUpdate(id, {
             standard: parseInt(standard),
             division,
-            academicYear,
+            date: formattedDate,
             registeredStudents,
             presentStudents,
             mealTakenStudents
@@ -78,27 +82,20 @@ export const updateAttendance = async (req, res) => {
 
 export const saveAttendance = async (req, res) => {
     try {
-        const { standard, division, academicYear, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
-        if (!academicYear) {
-            return res.status(400).json({ message: 'Academic year is required' });
-        }
+        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
         if (!date) {
             return res.status(400).json({ message: 'Date is required' });
         }
-
         const formattedDate = new Date(date).toISOString().split('T')[0];
-
         const data = await Attendance.findOneAndUpdate(
             {
                 standard: parseInt(standard),
                 division,
-                academicYear,
                 date: formattedDate
             },
             {
                 standard: parseInt(standard),
                 division,
-                academicYear,
                 date: formattedDate,
                 registeredStudents,
                 presentStudents,
@@ -111,7 +108,7 @@ export const saveAttendance = async (req, res) => {
         );
         res.status(200).json(data);
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -130,7 +127,7 @@ export const getDailyReport = async (req, res) => {
 
         res.status(200).json(data);
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
