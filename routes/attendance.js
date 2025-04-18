@@ -10,7 +10,8 @@ import {
     getSemiMonthlyReport,
     getCustomRangeReport,
     downloadDailyReportExcel,
-    downloadDailyReportPDF
+    downloadDailyReportPDF,
+    downloadSemiMonthlyReportExcel
 } from '../controllers/attendanceController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -32,6 +33,7 @@ router.get('/report/monthly/:year/:month', authenticate, getMonthlyReport);
 // @desc    Get semi-monthly attendance report (half: 1 or 2)
 // @access  Private
 router.get('/report/semi-monthly/:year/:month/:half', authenticate, getSemiMonthlyReport);
+router.get('/report/excel/semi-monthly/:year/:month/:half', authenticate, downloadSemiMonthlyReportExcel);
 
 // @route   GET /api/attendance/report/custom/:startDate/:endDate
 // @desc    Get custom date range attendance report

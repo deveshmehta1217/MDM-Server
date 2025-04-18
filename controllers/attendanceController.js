@@ -688,3 +688,206 @@ export const downloadDailyReportPDF = async (req, res) => {
         res.status(500).json({ message: 'PDF generation failed.' });
     }
 };
+
+export const downloadSemiMonthlyReportExcel = async (req, res) => {
+    try {
+        const { month, year, half } = req.params;
+
+        if (!month || !year || !half) {
+            return res.status(400).json({ message: 'month, year, and half parameters are required' });
+        }
+
+        const fromDate = new Date(year, month - 1, half === 'first' ? 1 : 16);
+        const toDate =
+            half === 'first'
+                ? new Date(year, month - 1, 15)
+                : new Date(year, month, 0); // last day of month
+
+        const data = await Attendance.find({
+            date: { $gte: fromDate, $lte: toDate }
+        }).sort({ date: 1 });
+
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet(`પત્રક (${fromDate.getDate()} - ${toDate.getDate()})`);
+
+        sheet.columns = Array(15).fill({ width: 12 });
+
+        // Header
+        sheet.getCell('A1').value = 'અક્ષયપાત્ર ફાઉન્ડેશન';
+        sheet.getCell('G1').value = 'મધ્યાહન ભોજન યોજના';
+        sheet.getCell('N1').value = 'પ્રમાણપત્ર';
+
+        try {
+            sheet.mergeCells('A1:G1');
+            sheet.mergeCells('G1:N1');
+            sheet.mergeCells('N1:O1');
+        } catch (err) {
+            console.warn('Merge error skipped (already merged?):', err.message);
+        }
+
+
+        // School Info
+        sheet.addRow([
+            'શાળાનું નામ:-',
+            '',
+            'માં ગાયત્રી હિન્દી પ્રાથમિક શાળા',
+            '',
+            '',
+            '',
+            'કુલ વર્ગો:',
+            '',
+            'ધોરણ:',
+            '',
+            'તારીખ:',
+            '',
+            'કેન્દ્ર નંબર:',
+            ''
+        ]);
+
+        sheet.addRow([]);
+
+        // Registered Students Section
+        sheet.addRow([
+            'નોંધાયેલબાળકોની સંખ્યા',
+            'અનુ. જાતિ',
+            '',
+            'અનુ. જનજાતિ',
+            '',
+            'સા.શૈ.પ.વ.',
+            '',
+            'અન્ય',
+            '',
+            'કુલ',
+            '',
+            'કુલ',
+            'મહિનો :-',
+            new Date(year, month - 1, 1)
+        ]);
+
+        sheet.addRow([
+            null,
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા'
+        ]);
+
+        // Sum Registered
+        const registered = { sc: { male: 0, female: 0 }, st: {}, obc: {}, general: {} };
+        data.forEach(record => {
+            ['sc', 'st', 'obc', 'general'].forEach(cat => {
+                ['male', 'female'].forEach(gender => {
+                    registered[cat][gender] = (registered[cat][gender] || 0) + (record.registeredStudents[cat][gender] || 0);
+                });
+            });
+        });
+
+        const registeredRow = [
+            null,
+            registered.sc.male || 0, registered.sc.female || 0,
+            registered.st.male || 0, registered.st.female || 0,
+            registered.obc.male || 0, registered.obc.female || 0,
+            registered.general.male || 0, registered.general.female || 0
+        ];
+
+        const totalBoys = registeredRow[1] + registeredRow[3] + registeredRow[5] + registeredRow[7];
+        const totalGirls = registeredRow[2] + registeredRow[4] + registeredRow[6] + registeredRow[8];
+        registeredRow.push(totalBoys, totalGirls);
+        registeredRow.push(totalBoys + totalGirls);
+        sheet.addRow(registeredRow);
+
+        // Spacer
+        sheet.addRow([null, null, null, null, null, 'હાજર બાળકોની સંખ્યા']);
+
+        // Attendance Table Headers
+        sheet.addRow([
+            'તારીખ',
+            'અનુ. જાતિ',
+            '',
+            'અનુ. જનજાતિ',
+            '',
+            'સા.શૈ.પ.વ.',
+            '',
+            'અન્ય',
+            '',
+            'કુલ',
+            '',
+            'કુલ',
+            '',
+            'આચાર્યની સહી'
+        ]);
+        sheet.addRow([
+            null,
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુમાર',
+            'કન્યા',
+            'કુલ',
+            '',
+            ''
+        ]);
+
+        // Attendance Rows
+        for (let d = fromDate.getDate(); d <= toDate.getDate(); d++) {
+            const thisDate = new Date(year, month - 1, d);
+            const record = data.find(r => new Date(r.date).getDate() === d);
+
+            const row = [d];
+            if (record) {
+                const getCounts = (cat) => [record.presentStudents[cat].male, record.presentStudents[cat].female];
+
+                let maleSum = 0;
+                let femaleSum = 0;
+                ['sc', 'st', 'obc', 'general'].forEach(cat => {
+                    const [m, f] = getCounts(cat);
+                    row.push(m, f);
+                    maleSum += m;
+                    femaleSum += f;
+                });
+
+                row.push(maleSum, femaleSum);
+                row.push(maleSum + femaleSum);
+            } else {
+                row.push(...Array(12).fill(''));
+            }
+
+            row.push('');
+            sheet.addRow(row);
+        }
+
+        // Formatting
+        sheet.eachRow({ includeEmpty: true }, (row) => {
+            row.eachCell((cell) => {
+                cell.alignment = {
+                    vertical: 'middle',
+                    horizontal: 'center',
+                    wrapText: true
+                };
+                cell.font = { name: 'Shruti', size: 11 };
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename*=UTF-8''${encodeURIComponent(`પત્રક_${fromDate.getDate()}થી_${toDate.getDate()}.xlsx`)}`
+        );
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Excel Report generation failed.' });
+    }
+};
