@@ -313,7 +313,7 @@ export const downloadDailyReportExcel = async (req, res) => {
 
         // Header rows
         sheet.mergeCells('A1:AF1');
-        sheet.getCell('A1').value = `ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)\nન. પ્રા. બાબાજીપુરા શાળા નં. 20`;
+        sheet.getCell('A1').value = `ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)\nન. પા. બાબાજીપુરા શાળા નં. 20`;
         sheet.getCell('A1').alignment = { vertical: 'middle', horizontal: 'center' };
         sheet.getCell('A1').font = { bold: true, size: 20 };
 
@@ -715,7 +715,7 @@ export const downloadDailyReportPDF = async (req, res) => {
   <div style="position: relative; text-align: center; margin-bottom: 20px;">
     <img src="${logoBase64}" alt="logo" style="position: absolute; left: 0; top: 0; width: 100px;" />
     <div>
-        <div class="header">ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)<br>ન. પ્રા. બાબાજીપુરા શાળા નં. 20</div>
+        <div class="header">ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)<br>ન. પા. બાબાજીપુરા શાળા નં. 20</div>
         <div class="subheader">મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક</div>
     </div>
     </div>
@@ -1200,7 +1200,7 @@ export const downloadSemiMonthlyReportPDF = async (req, res) => {
                 <div class="header">
                     <img src="${logoBase64}" alt="Logo" style="width: 80px; position: absolute; left: 20px; top: 20px;"/>
                     <div>ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)</div>
-                    <div>ન. પ્રા. બાબાજીપુરા શાળા નં. 20</div>
+                    <div>ન. પા. બાબાજીપુરા શાળા નં. 20</div>
                     <div>મધ્યાહ્ન ભોજન યોજના : ${half === '1' ? 'પ્રથમ' : 'દ્વિતીય'} પખવાડિક હાજરી પત્રક</div>
                     <div>${new Date(year, monthNum - 1, 1).toLocaleDateString('gu-IN', { month: 'long', year: 'numeric' })}</div>
                 </div>
