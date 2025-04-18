@@ -31,6 +31,9 @@ app.use(passport.initialize());
 configurePassport(passport);
 
 // Routes
+app.get('/test',(req, res) => {
+  res.send('API is working');
+} );
 app.use('/api/auth', authRoutes);
 app.use('/api/registered', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
