@@ -1,10 +1,11 @@
 // server.js
 import app from './app.js';
 import mongoose from 'mongoose';
-import { mongoURI } from './config/database.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
+// MongoDB connection
+const mongoURI = process.env.MONGO_URI;
 
 // Connect to MongoDB
 mongoose.connect(mongoURI)
