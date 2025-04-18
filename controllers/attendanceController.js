@@ -108,7 +108,6 @@ export const saveAttendance = async (req, res) => {
         );
         res.status(200).json(data);
     } catch (error) {
-        console.log(error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
@@ -127,7 +126,6 @@ export const getDailyReport = async (req, res) => {
 
         res.status(200).json(data);
     } catch (error) {
-        console.log(error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
