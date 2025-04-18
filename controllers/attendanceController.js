@@ -1039,3 +1039,250 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
         res.status(500).json({ message: 'Report generation failed.' });
     }
 };
+
+export const downloadSemiMonthlyReportPDF = async (req, res) => {
+    try {
+        const { month, year, half } = req.params;
+        
+        // Get dates and records
+        const monthNum = parseInt(month);
+        const startDay = half === '1' ? 1 : 16;
+        const endDay = half === '1' ? 15 : new Date(year, monthNum, 0).getDate();
+
+        // Create date list
+        const dateList = [];
+        for (let d = startDay; d <= endDay; d++) {
+            const date = new Date(Date.UTC(year, monthNum - 1, d));
+            dateList.push(date.toISOString().split('T')[0]);
+        }
+
+        // Get last attendance for registered totals
+        const lastAttendance = await Attendance.findOne({
+            date: {
+                $gte: new Date(`${year}-${month.toString().padStart(2, '0')}-${startDay.toString().padStart(2, '0')}`),
+                $lte: new Date(`${year}-${month.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`)
+            }
+        }).sort({ date: -1 });
+
+        // Calculate registered totals
+        const registeredTotals = {
+            sc_male: 0, sc_female: 0,
+            st_male: 0, st_female: 0,
+            obc_male: 0, obc_female: 0,
+            general_male: 0, general_female: 0
+        };
+
+        if (lastAttendance) {
+            ['sc', 'st', 'obc', 'general'].forEach(category => {
+                registeredTotals[`${category}_male`] = lastAttendance.registeredStudents[category].male;
+                registeredTotals[`${category}_female`] = lastAttendance.registeredStudents[category].female;
+            });
+        }
+
+        // Get all attendance records
+        const allRecords = await Attendance.find({
+            date: {
+                $gte: new Date(`${year}-${month.toString().padStart(2, '0')}-${startDay.toString().padStart(2, '0')}`),
+                $lte: new Date(`${year}-${month.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`)
+            }
+        }).sort({ date: 1 });
+
+        // Initialize data structures
+        const groupedByDate = {};
+        dateList.forEach(date => {
+            groupedByDate[date] = {
+                presentStudents: { sc: {male: 0, female: 0}, st: {male: 0, female: 0}, 
+                                 obc: {male: 0, female: 0}, general: {male: 0, female: 0} },
+                mealTakenStudents: { sc: {male: 0, female: 0}, st: {male: 0, female: 0}, 
+                                   obc: {male: 0, female: 0}, general: {male: 0, female: 0} }
+            };
+        });
+
+        // Calculate daily totals
+        allRecords.forEach(record => {
+            const dateKey = new Date(record.date).toISOString().split('T')[0];
+            ['presentStudents', 'mealTakenStudents'].forEach(type => {
+                ['sc', 'st', 'obc', 'general'].forEach(category => {
+                    groupedByDate[dateKey][type][category].male += record[type][category].male;
+                    groupedByDate[dateKey][type][category].female += record[type][category].female;
+                });
+            });
+        });
+
+        // Generate tables HTML
+        const generateTableRows = (data, type) => {
+            let rows = '';
+            Object.entries(data).forEach(([date, counts]) => {
+                const totals = { male: 0, female: 0 };
+                ['sc', 'st', 'obc', 'general'].forEach(cat => {
+                    totals.male += counts[type][cat].male;
+                    totals.female += counts[type][cat].female;
+                });
+
+                rows += `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${counts[type].sc.male}</td>
+                        <td>${counts[type].sc.female}</td>
+                        <td>${counts[type].st.male}</td>
+                        <td>${counts[type].st.female}</td>
+                        <td>${counts[type].obc.male}</td>
+                        <td>${counts[type].obc.female}</td>
+                        <td>${counts[type].general.male}</td>
+                        <td>${counts[type].general.female}</td>
+                        <td>${totals.male}</td>
+                        <td>${totals.female}</td>
+                        <td>${totals.male + totals.female}</td>
+                    </tr>
+                `;
+            });
+            return rows;
+        };
+
+        const headerRowRegistered = `
+            <tr>
+                <th rowspan="2">તારીખ</th>
+                <th colspan="2">અનુ. જાતિ</th>
+                <th colspan="2">અનુ. જનજાતિ</th>
+                <th colspan="2">સા.શૈ.પ.વર્ગ</th>
+                <th colspan="2">સામાન્ય</th>
+                <th colspan="2">કુલ</th>
+                <th rowspan="2">કુલ</th>
+            </tr>
+            <tr>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+            </tr>
+        `;
+
+        const headerRowMealTaken = `
+            <tr>
+                <th rowspan="2">તારીખ</th>
+                <th colspan="2">મગની દાળ</th>
+                <th colspan="2">તુવેરની દાળ</th>
+                <th colspan="2">મસુરની દાળ</th>
+                <th colspan="2">શાક</th>
+                <th colspan="2">કુલ</th>
+                <th rowspan="2">કુલ</th>
+            </tr>
+            <tr>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+                <th>કુમાર</th><th>કન્યા</th>
+            </tr>
+        `;
+
+        const logoBase64 = encodeImageToBase64(path.resolve('./assets/logo.png'));
+
+        const finalHTML = `
+            <!DOCTYPE html>
+            <html lang="gu">
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    @font-face {
+                        font-family: 'Shruti';
+                        src: url('file://${path.resolve('./assets/fonts/Shruti.ttf')}') format('truetype');
+                    }
+                    body { font-family: 'Shruti', sans-serif; padding: 20px; }
+                    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+                    th, td { border: 1px solid black; padding: 4px; text-align: center; font-size: 12px; }
+                    .header { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 20px; }
+                    .total-row { font-weight: bold; background-color: #f0f0f0; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <img src="${logoBase64}" alt="Logo" style="width: 80px; position: absolute; left: 20px; top: 20px;"/>
+                    <div>ડૉ. હોમીભાભા પ્રાથમિક શાળા (બપોર)</div>
+                    <div>ન. પ્રા. બાબાજીપુરા શાળા નં. 20</div>
+                    <div>મધ્યાહ્ન ભોજન યોજના : ${half === '1' ? 'પ્રથમ' : 'દ્વિતીય'} પખવાડિક હાજરી પત્રક</div>
+                    <div>${new Date(year, monthNum - 1, 1).toLocaleDateString('gu-IN', { month: 'long', year: 'numeric' })}</div>
+                </div>
+
+                <div style="text-align: right;">તારીખ: ${new Date().toLocaleDateString('en-IN')}</div>
+
+                <!-- Registered Students -->
+                <table>
+                    <thead>
+                        <tr><th colspan="12">નોંધાયેલ વિદ્યાર્થીઓની સંખ્યા</th></tr>
+                        ${headerRowRegistered}
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>કુલ</td>
+                            <td>${registeredTotals.sc_male}</td>
+                            <td>${registeredTotals.sc_female}</td>
+                            <td>${registeredTotals.st_male}</td>
+                            <td>${registeredTotals.st_female}</td>
+                            <td>${registeredTotals.obc_male}</td>
+                            <td>${registeredTotals.obc_female}</td>
+                            <td>${registeredTotals.general_male}</td>
+                            <td>${registeredTotals.general_female}</td>
+                            <td>${Object.values(registeredTotals).filter((v,i) => i % 2 === 0).reduce((a,b) => a+b, 0)}</td>
+                            <td>${Object.values(registeredTotals).filter((v,i) => i % 2 === 1).reduce((a,b) => a+b, 0)}</td>
+                            <td>${Object.values(registeredTotals).reduce((a,b) => a+b, 0)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Present Students -->
+                <table>
+                    <thead>
+                        <tr><th colspan="12">હાજર વિદ્યાર્થીઓની સંખ્યા</th></tr>
+                        ${headerRowRegistered}
+                    </thead>
+                    <tbody>
+                        ${generateTableRows(groupedByDate, 'presentStudents')}
+                    </tbody>
+                </table>
+
+                <!-- Meal Taken Students -->
+                <table>
+                    <thead>
+                        <tr><th colspan="12">ભોજન લાભાર્થી વિદ્યાર્થીઓની સંખ્યા</th></tr>
+                        ${headerRowMealTaken}
+                    </thead>
+                    <tbody>
+                        ${generateTableRows(groupedByDate, 'mealTakenStudents')}
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px; text-align: right;">
+                    આચાર્યની સહી: __________________________
+                </div>
+
+                <div style="margin-top: 20px; text-align: center; font-size: 10px; font-style: italic;">
+                    Digitally generated on ${new Date().toLocaleString('en-IN')}
+                </div>
+            </body>
+            </html>
+        `;
+
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.setContent(finalHTML, { waitUntil: 'networkidle0' });
+        
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
+        });
+
+        await browser.close();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Report_${month}_${half}.pdf`);
+        res.end(pdfBuffer);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'PDF Report generation failed.' });
+    }
+};
