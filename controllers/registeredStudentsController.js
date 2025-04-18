@@ -13,11 +13,13 @@ export const getRegisteredStudents = async (req, res) => {
 export const getRegisteredStudentsByClass = async (req, res) => {
     try {
         const { standard, division, academicYear } = req.params;
+        console.log(standard, division, academicYear);
         const data = await RegisteredStudents.findOne({
             standard: parseInt(standard),
             division,
             academicYear
         });
+        console.log(data);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
