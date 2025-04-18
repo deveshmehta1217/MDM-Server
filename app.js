@@ -8,14 +8,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
-// Get directory name in ES module
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -33,8 +25,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve uploads directory statically
-app.use('/uploads', express.static(uploadDir));
 
 // Passport middleware
 app.use(passport.initialize());
