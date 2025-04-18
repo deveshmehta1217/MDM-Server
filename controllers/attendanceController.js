@@ -897,6 +897,12 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
         });
         worksheet.getCell('L4').value = currentDate;
         worksheet.getCell('L4').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Add month name in Gujarati in cell N6
+        const gujaratiMonths = ['જાન્યુઆરી', 'ફેબ્રુઆરી', 'માર્ચ', 'એપ્રિલ', 'મે', 'જૂન', 'જુલાઈ', 'ઓગસ્ટ', 'સપ્ટેમ્બર', 'ઓક્ટોબર', 'નવેમ્બર', 'ડિસેમ્બર'];
+        worksheet.getCell('N6').value = gujaratiMonths[monthNum - 1];
+        worksheet.getCell('N6').alignment = { vertical: 'middle', horizontal: 'center' };
+        worksheet.getCell('N6').font = { name: 'Shruti', size: 11 };
         
         // Add registered students data to row 8
         const row8 = worksheet.getRow(8);
@@ -928,7 +934,11 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
         let currentRow = 13;
         Object.entries(groupedByDate).forEach(([dateStr, data]) => {
             const row = worksheet.getRow(currentRow);
-            row.getCell(1).value = dateStr;
+            row.getCell(1).value = new Date(dateStr).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
 
             // Present students data
             row.getCell(2).value = data.presentStudents.sc.male;
@@ -979,7 +989,11 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
         currentRow = half === '1' ? 33 : 34;
         Object.entries(groupedByDate).forEach(([dateStr, data]) => {
             const row = worksheet.getRow(currentRow);
-            row.getCell(1).value = dateStr;
+            row.getCell(1).value = new Date(dateStr).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
 
             row.getCell(2).value = data.mealTakenStudents.sc.male;
             row.getCell(3).value = data.mealTakenStudents.sc.female;
