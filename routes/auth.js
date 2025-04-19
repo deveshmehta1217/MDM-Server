@@ -8,8 +8,7 @@ const router = express.Router();
 // @route   POST /api/auth/register
 // @desc    Register a new user (principal only can register others)
 // @access  Private/Principal
-router.post('/register', register);
-// router.post('/register', authenticate, isPrincipal, register);
+// router.post('/register', register);
 
 // @route   POST /api/auth/login
 // @desc    Login user and return JWT token
