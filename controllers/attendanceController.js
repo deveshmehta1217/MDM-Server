@@ -378,11 +378,15 @@ export const downloadDailyReportExcel = async (req, res) => {
         const totalStd5to8 = Array(30).fill(0);
         const grandTotal = Array(30).fill(0);
 
-        data.sort((a, b) => a.standard - b.standard); // Ensure correct order
+        data.sort((a, b) => {
+            if (a.standard === 0) return -1;  // Balvatika comes first
+            if (b.standard === 0) return 1;
+            return a.standard - b.standard;
+        });
 
         data.forEach((record, idx) => {
             const rowData = [];
-            rowData.push(`${record.standard} - ${record.division}`);
+            rowData.push(record.standard === 0 ? 'બાલવાટિકા' : `${record.standard} - ${record.division}`);
             const sum = { male: 0, female: 0 };
 
             categoriesCode.forEach((category) => {
@@ -570,9 +574,15 @@ export const downloadDailyReportPDF = async (req, res) => {
 
         const rows = [];
 
+        data.sort((a, b) => {
+            if (a.standard === 0) return -1;  // Balvatika comes first
+            if (b.standard === 0) return 1;
+            return a.standard - b.standard;
+        });
+
         data.forEach((record, idx) => {
             const rowData = [];
-            rowData.push(`${record.standard}-${record.division}`);
+            rowData.push(record.standard === 0 ? 'બાલવાટિકા' : `${record.standard}-${record.division}`);
             const sum = { male: 0, female: 0 };
 
             categoriesCode.forEach((category) => {
@@ -624,11 +634,11 @@ export const downloadDailyReportPDF = async (req, res) => {
         let lastStandard = 0;
 
         rows.forEach((row, idx) => {
-            const standard = parseInt(row[0].split('-')[0]);
+            const standard = row[0] === 'બાલવાટિકા' ? 0 : parseInt(row[0].split('-')[0]);
             tableRows += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
 
             const nextRow = rows[idx + 1];
-            const nextStandard = nextRow ? parseInt(nextRow[0].split('-')[0]) : null;
+            const nextStandard = nextRow ? (nextRow[0] === 'બાલવાટિકા' ? 0 : parseInt(nextRow[0].split('-')[0])) : null;
 
             const insertTotalRow = (label, arr) =>
                 `<tr style="font-weight: bold;">${[label, ...arr.map(v => v || ''), ''].map(cell => `<td>${cell}</td>`).join('')}</tr>`;

@@ -4,7 +4,7 @@ const RegisteredStudentSchema = new mongoose.Schema({
     standard: {
         type: Number,
         required: true,
-        enum: [1, 2, 3, 4, 5, 6, 7, 8]
+        enum: [0, 1, 2, 3, 4, 5, 6, 7, 8]
     },
     division: {
         type: String,
