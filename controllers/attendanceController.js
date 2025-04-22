@@ -130,25 +130,6 @@ export const getDailyReport = async (req, res) => {
     }
 };
 
-export const getMonthlyReport = async (req, res) => {
-    try {
-        const { month, year } = req.params;
-        const startDate = new Date(year, month - 1, 1);
-        const endDate = new Date(year, month, 0);
-
-        const data = await Attendance.find({
-            date: {
-                $gte: startDate,
-                $lte: endDate
-            }
-        }).sort({ date: 1, standard: 1, division: 1 });
-
-        res.status(200).json(data);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
 export const getSemiMonthlyReport = async (req, res) => {
     try {
         const { month, year, half } = req.params;
@@ -236,20 +217,29 @@ export const getSemiMonthlyReport = async (req, res) => {
                 record.presentStudents.obc.male + record.presentStudents.general.male;
             presentTotals.totalFemale += record.presentStudents.sc.female + record.presentStudents.st.female +
                 record.presentStudents.obc.female + record.presentStudents.general.female;
-            presentTotals.grandTotal += presentTotals.totalMale + presentTotals.totalFemale;
+            // presentTotals.grandTotal = presentTotals.totalMale + presentTotals.totalFemale;
 
-            overallTotals.presentStudents.totalMale += presentTotals.totalMale;
-            overallTotals.presentStudents.totalFemale += presentTotals.totalFemale;
-            overallTotals.presentStudents.grandTotal += presentTotals.grandTotal;
-
+            
             // Calculate daily totals for mealTakenStudents
             const mealTotals = result[dateKey].mealTakenStudents;
             mealTotals.totalMale += record.mealTakenStudents.sc.male + record.mealTakenStudents.st.male +
-                record.mealTakenStudents.obc.male + record.mealTakenStudents.general.male;
+            record.mealTakenStudents.obc.male + record.mealTakenStudents.general.male;
             mealTotals.totalFemale += record.mealTakenStudents.sc.female + record.mealTakenStudents.st.female +
-                record.mealTakenStudents.obc.female + record.mealTakenStudents.general.female;
-            mealTotals.grandTotal += mealTotals.totalMale + mealTotals.totalFemale;
-
+            record.mealTakenStudents.obc.female + record.mealTakenStudents.general.female;
+            // mealTotals.grandTotal = mealTotals.totalMale + mealTotals.totalFemale;
+            
+        });
+        
+        Object.keys(result).forEach(dateKey => {
+            const presentTotals = result[dateKey].presentStudents;
+            const mealTotals = result[dateKey].mealTakenStudents;
+            
+            presentTotals.grandTotal = presentTotals.totalMale + presentTotals.totalFemale;
+            mealTotals.grandTotal = mealTotals.totalMale + mealTotals.totalFemale;
+            
+            overallTotals.presentStudents.totalMale += presentTotals.totalMale;
+            overallTotals.presentStudents.totalFemale += presentTotals.totalFemale;
+            overallTotals.presentStudents.grandTotal += presentTotals.grandTotal;
             overallTotals.mealTakenStudents.totalMale += mealTotals.totalMale;
             overallTotals.mealTakenStudents.totalFemale += mealTotals.totalFemale;
             overallTotals.mealTakenStudents.grandTotal += mealTotals.grandTotal;
@@ -258,23 +248,6 @@ export const getSemiMonthlyReport = async (req, res) => {
         res.status(200).json({ result, overallTotals });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-export const getCustomRangeReport = async (req, res) => {
-    try {
-        const { startDate, endDate } = req.params;
-
-        const data = await Attendance.find({
-            date: {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
-            }
-        }).sort({ date: 1, standard: 1, division: 1 });
-
-        res.status(200).json(data);
-    } catch (error) {
-        res.status500().json({ message: 'Server error', error: error.message });
     }
 };
 
