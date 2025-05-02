@@ -142,8 +142,8 @@ export const getAttendanceStatus = async (req, res) => {
         const academicYear = m < 6 ? `${y - 1}-${y}` : `${y}-${y + 1}`;
         const registeredStudents = await RegisteredStudent.find({ academicYear });
 
-        const startDate = new Date(y, m, startDay);
-        const endDate = new Date(y, m, endDay, 23, 59, 59, 999);
+        const startDate = new Date(Date.UTC(y, m, startDay));
+        const endDate = new Date(Date.UTC(y, m, endDay));
 
         const attendanceDocs = await Attendance.find({
             date: { $gte: startDate, $lte: endDate }
@@ -159,7 +159,7 @@ export const getAttendanceStatus = async (req, res) => {
         // Prepare status array
         const status = [];
         for (let day = startDay; day <= endDay; day++) {
-            const dateObj = new Date(y, m, day);
+            const dateObj = new Date(Date.UTC(y, m, day));
             const dateStr = dateObj.toISOString().split('T')[0];
 
             const attendanceRecords = registeredStudents.map(({ standard, division }) => {
@@ -187,3 +187,55 @@ export const getAttendanceStatus = async (req, res) => {
     }
 };
 
+export const getDailyAttendanceStatus = async (req, res) => {
+    try {
+        const { date } = req.params;
+
+        if (!date || isNaN(Date.parse(date))) {
+            return res.status(400).json({ message: 'Invalid or missing date parameter' });
+        }
+
+        const dateObj = new Date(date);
+        const y = dateObj.getFullYear();
+        const m = dateObj.getMonth();
+        const startOfDay = new Date(y, m, dateObj.getDate(), 0, 0, 0, 0);
+        const endOfDay = new Date(y, m, dateObj.getDate(), 23, 59, 59, 999);
+        const dateStr = startOfDay.toISOString().split('T')[0];
+
+        const academicYear = m < 6 ? `${y - 1}-${y}` : `${y}-${y + 1}`;
+        const registeredStudents = await RegisteredStudent.find({ academicYear });
+
+        const attendanceDocs = await Attendance.find({
+            date: { $gte: startOfDay, $lte: endOfDay }
+        }).select('standard division');
+
+        const attendanceMap = new Set(
+            attendanceDocs.map(doc => `${doc.standard}|${doc.division}`)
+        );
+
+        const attendanceRecords = registeredStudents.map(({ standard, division }) => {
+            const key = `${standard}|${division}`;
+            return {
+                standard,
+                division,
+                attendanceTaken: attendanceMap.has(key)
+            };
+        });
+
+        const registeredClasses = registeredStudents.map(({ standard, division }) => ({
+            standard,
+            division
+        }));
+
+        res.json({
+            registeredClasses,
+            status: {
+                date: dateStr,
+                attendance: attendanceRecords
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};

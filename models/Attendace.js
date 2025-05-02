@@ -166,10 +166,8 @@ const AttendanceSchema = new mongoose.Schema({
             },
         },
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
+}, {
+    timestamps: true
 });
 
 const Attendance = mongoose.model('Attendance', AttendanceSchema);

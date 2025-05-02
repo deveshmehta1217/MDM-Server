@@ -259,8 +259,6 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
                 const row = worksheet.getRow(currentRow);
                 row.getCell(1).value = new Date(dateStr).toLocaleDateString('en-IN', {
                     day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
                 });
 
                 // Present students data
@@ -315,8 +313,6 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
                 const row = worksheet.getRow(currentRow);
                 row.getCell(1).value = new Date(dateStr).toLocaleDateString('en-IN', {
                     day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
                 });
 
                 row.getCell(2).value = data.mealTakenStudents.sc.male;
