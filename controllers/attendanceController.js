@@ -135,7 +135,7 @@ export const getAttendanceStatus = async (req, res) => {
         }
 
         const y = parseInt(year);
-        const m = parseInt(month) - 1; // 0-indexed
+        const m = parseInt(month) - 1; // JavaScript months are 0-indexed
         const startDay = half === '1' ? 1 : 16;
         const endDay = half === '1' ? 15 : new Date(y, m + 1, 0).getDate();
 
@@ -149,14 +149,15 @@ export const getAttendanceStatus = async (req, res) => {
             date: { $gte: startDate, $lte: endDate }
         }).select('standard division date');
 
-        // Build a quick lookup map: "YYYY-MM-DD|standard|division" => true
+        // Build a lookup map
         const attendanceMap = new Set();
         for (const doc of attendanceDocs) {
             const dateStr = doc.date.toISOString().split('T')[0];
             attendanceMap.add(`${dateStr}|${doc.standard}|${doc.division}`);
         }
 
-        const results = [];
+        // Prepare status array
+        const status = [];
         for (let day = startDay; day <= endDay; day++) {
             const dateObj = new Date(y, m, day);
             const dateStr = dateObj.toISOString().split('T')[0];
@@ -170,12 +171,19 @@ export const getAttendanceStatus = async (req, res) => {
                 };
             });
 
-            results.push({ date: dateStr, attendance: attendanceRecords });
+            status.push({ date: dateStr, attendance: attendanceRecords });
         }
 
-        res.json(results);
+        // Format registered classes
+        const registeredClasses = registeredStudents.map(({ standard, division }) => ({
+            standard,
+            division
+        }));
+
+        res.json({ registeredClasses, status });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
+
