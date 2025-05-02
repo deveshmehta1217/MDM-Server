@@ -9,6 +9,7 @@ import {
     getSemiMonthlyReport,
     downloadDailyReportExcel,
     downloadSemiMonthlyReportExcel,
+    getAttendanceStatus,
 } from '../controllers/attendanceController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -35,6 +36,11 @@ router.get('/:date', authenticate, getAttendance);
 // @desc    Get attendance by class for a specific date
 // @access  Private
 router.get('/:date/:standard/:division', authenticate, getAttendanceByClass);
+
+// @route   GET /api/attendance/:date/:standard/:division
+// @desc    Get attendance by class for a specific date
+// @access  Private
+router.get('/status/:year/:month/:half', authenticate, getAttendanceStatus);
 
 // @route   POST /api/attendance
 // @desc    Create a new attendance record
