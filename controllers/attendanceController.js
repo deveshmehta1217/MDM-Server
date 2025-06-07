@@ -10,7 +10,10 @@ export const getAttendance = async (req, res) => {
     try {
         const { date } = req.params;
         const formattedDate = new Date(date).toISOString().split('T')[0];
-        const data = await Attendance.find({ date: formattedDate });
+        const data = await Attendance.find({ 
+            date: formattedDate,
+            schoolId: req.schoolId 
+        });
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -24,7 +27,8 @@ export const getAttendanceByClass = async (req, res) => {
         const data = await Attendance.findOne({
             standard: parseInt(standard),
             division,
-            date: formattedDate
+            date: formattedDate,
+            schoolId: req.schoolId
         });
         res.status(200).json(data);
     } catch (error) {
@@ -40,6 +44,7 @@ export const createAttendance = async (req, res) => {
         }
         const formattedDate = new Date(date).toISOString().split('T')[0];
         const data = await Attendance.create({
+            schoolId: req.schoolId,
             standard: parseInt(standard),
             division,
             date: formattedDate,
@@ -61,6 +66,13 @@ export const updateAttendance = async (req, res) => {
             return res.status(400).json({ message: 'Date is required' });
         }
         const formattedDate = new Date(date).toISOString().split('T')[0];
+        
+        // First check if the attendance record belongs to the user's school
+        const existingRecord = await Attendance.findOne({ _id: id, schoolId: req.schoolId });
+        if (!existingRecord) {
+            return res.status(404).json({ message: 'Attendance record not found or access denied' });
+        }
+        
         const data = await Attendance.findByIdAndUpdate(id, {
             standard: parseInt(standard),
             division,
@@ -84,11 +96,13 @@ export const saveAttendance = async (req, res) => {
         const formattedDate = new Date(date).toISOString().split('T')[0];
         const data = await Attendance.findOneAndUpdate(
             {
+                schoolId: req.schoolId,
                 standard: parseInt(standard),
                 division,
                 date: formattedDate
             },
             {
+                schoolId: req.schoolId,
                 standard: parseInt(standard),
                 division,
                 date: formattedDate,
@@ -116,7 +130,8 @@ export const getDailyReport = async (req, res) => {
         const formattedDate = new Date(date).toISOString().split('T')[0];
 
         const data = await Attendance.find({
-            date: formattedDate
+            date: formattedDate,
+            schoolId: req.schoolId
         }).sort({ standard: 1, division: 1 });
 
         res.status(200).json(data);
@@ -139,14 +154,18 @@ export const getAttendanceStatus = async (req, res) => {
         const startDay = half === '1' ? 1 : 16;
         const endDay = half === '1' ? 15 : new Date(y, m + 1, 0).getDate();
 
-        const academicYear = m < 6 ? `${y - 1}-${y}` : `${y}-${y + 1}`;
-        const registeredStudents = await RegisteredStudent.find({ academicYear });
+        const academicYear = m < 5 ? `${y - 1}-${y}` : `${y}-${y + 1}`;
+        const registeredStudents = await RegisteredStudent.find({ 
+            academicYear,
+            schoolId: req.schoolId 
+        });
 
         const startDate = new Date(Date.UTC(y, m, startDay));
         const endDate = new Date(Date.UTC(y, m, endDay));
 
         const attendanceDocs = await Attendance.find({
-            date: { $gte: startDate, $lte: endDate }
+            date: { $gte: startDate, $lte: endDate },
+            schoolId: req.schoolId
         }).select('standard division date');
 
         // Build a lookup map
@@ -202,11 +221,15 @@ export const getDailyAttendanceStatus = async (req, res) => {
         const endOfDay = new Date(y, m, dateObj.getDate(), 23, 59, 59, 999);
         const dateStr = startOfDay.toISOString().split('T')[0];
 
-        const academicYear = m < 6 ? `${y - 1}-${y}` : `${y}-${y + 1}`;
-        const registeredStudents = await RegisteredStudent.find({ academicYear });
+        const academicYear = m < 5 ? `${y - 1}-${y}` : `${y}-${y + 1}`;
+        const registeredStudents = await RegisteredStudent.find({ 
+            academicYear,
+            schoolId: req.schoolId 
+        });
 
         const attendanceDocs = await Attendance.find({
-            date: { $gte: startOfDay, $lte: endOfDay }
+            date: { $gte: startOfDay, $lte: endOfDay },
+            schoolId: req.schoolId
         }).select('standard division');
 
         const attendanceMap = new Set(

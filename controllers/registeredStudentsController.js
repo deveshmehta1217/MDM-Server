@@ -3,7 +3,10 @@ import RegisteredStudents from '../models/RegisteredStudents.js';
 export const getRegisteredStudents = async (req, res) => {
     try {
         const { academicYear } = req.params;
-        const data = await RegisteredStudents.find({ academicYear });
+        const data = await RegisteredStudents.find({ 
+            academicYear,
+            schoolId: req.schoolId 
+        });
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -16,7 +19,8 @@ export const getRegisteredStudentsByClass = async (req, res) => {
         const data = await RegisteredStudents.findOne({
             standard: parseInt(standard),
             division,
-            academicYear
+            academicYear,
+            schoolId: req.schoolId
         });
         res.status(200).json(data);
     } catch (error) {
@@ -31,6 +35,7 @@ export const createRegisteredStudent = async (req, res) => {
             return res.status(400).json({ message: 'Academic year is required' });
         }
         const data = await RegisteredStudents.create({
+            schoolId: req.schoolId,
             standard: parseInt(standard),
             division,
             counts,
@@ -49,13 +54,20 @@ export const updateRegisteredStudent = async (req, res) => {
         if (!academicYear) {
             return res.status(400).json({ message: 'Academic year is required' });
         }
+        
+        // First check if the record belongs to the user's school
+        const existingRecord = await RegisteredStudents.findOne({ _id: id, schoolId: req.schoolId });
+        if (!existingRecord) {
+            return res.status(404).json({ message: 'Registered student record not found or access denied' });
+        }
+        
         const data = await RegisteredStudents.findByIdAndUpdate(id, {
             standard: parseInt(standard),
             division,
             counts,
             academicYear
         }, { new: true });
-        res.status(201).json(data);
+        res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
@@ -70,11 +82,13 @@ export const saveRegisteredStudent = async (req, res) => {
         
         const data = await RegisteredStudents.findOneAndUpdate(
             {
+                schoolId: req.schoolId,
                 standard: parseInt(standard),
                 division,
                 academicYear
             },
             {
+                schoolId: req.schoolId,
                 standard: parseInt(standard),
                 division,
                 counts,

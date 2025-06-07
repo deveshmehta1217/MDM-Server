@@ -1,6 +1,17 @@
 import mongoose from 'mongoose';
 
 const RegisteredStudentSchema = new mongoose.Schema({
+    schoolId: {
+        type: String,
+        required: true,
+        validate: {
+            validator: function(v) {
+                return /^[0-9]{11}$/.test(v);
+            },
+            message: 'School ID must be exactly 11 digits'
+        },
+        index: true
+    },
     standard: {
         type: Number,
         required: true,

@@ -8,7 +8,7 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
         
         // Calculate academic year based on month (June-May)
         const monthNum = parseInt(month);
-        const academicYear = monthNum >= 6 
+        const academicYear = monthNum >= 5 
             ? { start: year, end: parseInt(year) + 1 }
             : { start: parseInt(year) - 1, end: year };
 

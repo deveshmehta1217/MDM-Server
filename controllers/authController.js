@@ -3,19 +3,30 @@ import User from '../models/User.js';
 
 export const register = async (req, res) => {
   try {
-    const { name, id, password } = req.body;
+    const { name, password, mobileNo, email, schoolName, schoolId, isAdmin } = req.body;
     
-    // Check if user already exists
-    let user = await User.findOne({ id });
-    if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+    // Validate required fields
+    if (!name || !password || !mobileNo || !email || !schoolName || !schoolId) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+    
+    // Check if user already exists (by email or mobile)
+    let existingUser = await User.findOne({ 
+      $or: [{ email }, { mobileNo }] 
+    });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email or mobile number already exists' });
     }
     
     // Create new user
-    user = new User({
+    let user = new User({
       name,
-      id,
       password,
+      mobileNo,
+      email,
+      schoolName,
+      schoolId,
+      isAdmin: isAdmin || false
     });
     
     await user.save();
@@ -28,7 +39,11 @@ export const register = async (req, res) => {
       user: {
         _id: user._id,
         name: user.name,
-        id: user.id,
+        mobileNo: user.mobileNo,
+        email: user.email,
+        schoolName: user.schoolName,
+        schoolId: user.schoolId,
+        isAdmin: user.isAdmin
       }
     });
   } catch (error) {
@@ -38,10 +53,10 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { id, password } = req.body;
+    const { schoolId, password } = req.body;
     
-    // Find user
-    const user = await User.findOne({ id });
+    // Find user by email or mobile number
+    const user = await User.findOne({ schoolId });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -60,7 +75,11 @@ export const login = async (req, res) => {
       user: {
         _id: user._id,
         name: user.name,
-        id: user.id,
+        mobileNo: user.mobileNo,
+        email: user.email,
+        schoolName: user.schoolName,
+        schoolId: user.schoolId,
+        isAdmin: user.isAdmin
       }
     });
   } catch (error) {

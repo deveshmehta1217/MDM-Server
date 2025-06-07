@@ -1,26 +1,30 @@
 # Mid Day Meal Management System (MDM Server)
 
-A backend server for managing and generating reports for the Mid Day Meal scheme in schools.
+A multi-tenant backend server for managing and generating reports for the Mid Day Meal scheme in government primary schools across Gujarat.
 
 ## Features
 
-- User Authentication (Login/Register)
-- Daily Attendance Management
-- Student Registration Management
-- Report Generation:
+- **Multi-Tenant Architecture**: Complete data isolation between schools
+- **User Authentication**: JWT-based login/register with school-level access
+- **Daily Attendance Management**: Track student attendance by class and category
+- **Student Registration Management**: Manage registered students by academic year
+- **Advanced Reporting**:
   - Daily Reports (PDF/Excel)
   - Semi-Monthly Reports (PDF/Excel)
   - Monthly Reports
   - Custom Date Range Reports
+- **School Management**: Support for multiple schools with unique 11-digit IDs
+- **Role-Based Access**: Admin and Teacher roles with appropriate permissions
 
 ## Tech Stack
 
 - Node.js
 - Express.js
-- MongoDB
+- MongoDB with optimized indexes
 - ExcelJS (Excel report generation)
 - Puppeteer (PDF report generation)
-- JWT Authentication
+- JWT Authentication with school context
+- Multi-tenant data architecture
 
 ## Prerequisites
 
@@ -96,23 +100,50 @@ npm start
 
 ### User
 - name: String
-- id: String (unique)
 - password: String (hashed)
+- mobileNo: String (10 digits, unique)
+- email: String (unique, validated)
+- schoolName: String
+- schoolId: String (11 digits, indexed)
+- isAdmin: Boolean (default: false)
 - createdAt: Date
 
 ### Attendance
-- standard: Number (1-8)
+- schoolId: String (11 digits, indexed)
+- standard: Number (0-8)
 - division: String (A-D)
 - date: Date
-- registeredStudents: Object
-- presentStudents: Object
-- mealTakenStudents: Object
+- registeredStudents: Object (by category and gender)
+- presentStudents: Object (by category and gender)
+- mealTakenStudents: Object (by category and gender)
 
 ### RegisteredStudents
-- standard: Number (1-8)
+- schoolId: String (11 digits, indexed)
+- standard: Number (0-8)
 - division: String (A-D)
 - academicYear: String
-- counts: Object
+- counts: Object (by category and gender)
+
+## Multi-Tenant Features
+
+### School Isolation
+- Complete data separation between schools
+- School-specific authentication and authorization
+- Automatic schoolId filtering in all queries
+
+### Security
+- JWT tokens include school context
+- Role-based access control (Admin/Teacher)
+- Input validation and sanitization
+- Protected routes with school-level permissions
+
+### Scalability
+- Optimized database indexes for multi-tenant queries
+- Efficient compound indexes on (schoolId + other fields)
+- Support for 15-20 schools on Vercel free plan
+- Ready for horizontal scaling
+
+For detailed multi-tenant setup instructions, see [MULTI_TENANT_SETUP.md](./MULTI_TENANT_SETUP.md)
 
 ## Author
 

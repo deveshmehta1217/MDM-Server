@@ -8,14 +8,51 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  id: {
-    type: String,
-    required: true,
-    unique: true
-  },
   password: {
     type: String,
     required: true
+  },
+  mobileNo: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return /^[0-9]{10}$/.test(v);
+      },
+      message: 'Mobile number must be 10 digits'
+    }
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    validate: {
+      validator: function(v) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: 'Please enter a valid email address'
+    }
+  },
+  schoolName: {
+    type: String,
+    required: true
+  },
+  schoolId: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^[0-9]{11}$/.test(v);
+      },
+      message: 'School ID must be exactly 11 digits'
+    },
+    index: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
@@ -43,7 +80,11 @@ UserSchema.methods.comparePassword = async function(password) {
 
 // Generate JWT
 UserSchema.methods.generateAuthToken = function() {
-  return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET || 'mdm-secret-key', {
+  return jwt.sign({ 
+    id: this._id, 
+    schoolId: this.schoolId, 
+    isAdmin: this.isAdmin
+  }, process.env.JWT_SECRET || 'mdm-secret-key', {
     expiresIn: '1d'
   });
 };
