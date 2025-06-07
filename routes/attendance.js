@@ -9,6 +9,8 @@ import {
     getSemiMonthlyReport,
     downloadDailyReportExcel,
     downloadSemiMonthlyReportExcel,
+    getSemiMonthlyReportData,
+    getDailyReportData,
     getAttendanceStatus,
     getDailyAttendanceStatus,
 } from '../controllers/attendanceController.js';
@@ -21,12 +23,14 @@ const router = express.Router();
 // @access  Private
 router.get('/report/daily/:date', authenticateSchool, getDailyReport);
 router.get('/report/excel/daily/:date', authenticateSchool, downloadDailyReportExcel);
+router.get('/report/data/daily/:date', authenticateSchool, getDailyReportData);
 
 // @route   GET /api/attendance/report/semi-monthly/:year/:month/:half
 // @desc    Get semi-monthly attendance report (half: 1 or 2)
 // @access  Private
 router.get('/report/semi-monthly/:year/:month/:half', authenticateSchool, getSemiMonthlyReport);
 router.get('/report/excel/semi-monthly/:year/:month/:half', authenticateSchool, downloadSemiMonthlyReportExcel);
+router.get('/report/data/semi-monthly/:year/:month/:half', authenticateSchool, getSemiMonthlyReportData);
 
 // @route   GET /api/attendance/:date
 // @desc    Get all attendance for a specific date

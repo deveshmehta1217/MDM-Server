@@ -3,8 +3,10 @@ import RegisteredStudent from '../models/RegisteredStudents.js';
 import { getSemiMonthlyReport } from './attendanceControllers/semiMonthlyData.js';
 import { downloadSemiMonthlyReportExcel } from './attendanceControllers/semiMonthlyExcel.js';
 import { downloadDailyReportExcel } from './attendanceControllers/dailyExcel.js';
+import { getSemiMonthlyReportData } from './attendanceControllers/semiMonthlyDataOnly.js';
+import { getDailyReportData } from './attendanceControllers/dailyDataOnly.js';
 
-export { getSemiMonthlyReport, downloadDailyReportExcel, downloadSemiMonthlyReportExcel };
+export { getSemiMonthlyReport, downloadDailyReportExcel, downloadSemiMonthlyReportExcel, getSemiMonthlyReportData, getDailyReportData };
 
 export const getAttendance = async (req, res) => {
     try {
