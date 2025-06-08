@@ -1,7 +1,20 @@
 // routes/auth.js
 import express from 'express';
-import { register, login, getProfile } from '../controllers/authController.js';
-import { authenticateWithSchool } from '../middleware/auth.js';
+import { 
+  register, 
+  login, 
+  getProfile, 
+  updateProfile, 
+  changePassword, 
+  forgotPassword, 
+  resetPassword,
+  verifyUser,
+  unverifyUser,
+  getVerificationStatus,
+  getAllUsers
+} from '../controllers/authController.js';
+import { authenticateWithSchool, requireAdmin } from '../middleware/auth.js';
+import { checkVerificationStatus, requireVerification } from '../middleware/verification.js';
 
 const router = express.Router();
 
@@ -16,8 +29,48 @@ router.post('/register', register);
 router.post('/login', login);
 
 // @route   GET /api/auth/profile
-// @desc    Get current user profile
+// @desc    Get current user profile (allowed without verification)
 // @access  Private
-router.get('/profile', authenticateWithSchool, getProfile);
+router.get('/profile', authenticateWithSchool, checkVerificationStatus, getProfile);
+
+// @route   PUT /api/auth/profile
+// @desc    Update user profile (allowed without verification)
+// @access  Private
+router.put('/profile', authenticateWithSchool, requireVerification, updateProfile);
+
+// @route   PUT /api/auth/change-password
+// @desc    Change user password (allowed without verification)
+// @access  Private
+router.put('/change-password', authenticateWithSchool, requireVerification, changePassword);
+
+// @route   POST /api/auth/forgot-password
+// @desc    Send password reset email
+// @access  Public
+router.post('/forgot-password', requireVerification, forgotPassword);
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset password with token
+// @access  Public
+router.post('/reset-password', requireVerification, resetPassword);
+
+// @route   GET /api/auth/verification-status
+// @desc    Get user verification status
+// @access  Private
+router.get('/verification-status', authenticateWithSchool, getVerificationStatus);
+
+// @route   POST /api/auth/verify/:userId
+// @desc    Verify a user (Admin only)
+// @access  Private
+router.post('/verify/:userId', authenticateWithSchool, requireAdmin, verifyUser);
+
+// @route   POST /api/auth/unverify/:userId
+// @desc    Unverify a user (Admin only)
+// @access  Private
+router.post('/unverify/:userId', authenticateWithSchool, requireAdmin, unverifyUser);
+
+// @route   GET /api/auth/users
+// @desc    Get all users with pagination and filtering (Admin only)
+// @access  Private
+router.get('/users', authenticateWithSchool, requireAdmin, getAllUsers);
 
 export default router;
