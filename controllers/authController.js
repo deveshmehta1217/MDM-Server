@@ -74,6 +74,23 @@ export const register = async (req, res) => {
     
     await user.save();
     
+    // Send welcome email
+    try {
+      const transporter = createTransporter();
+      const mailOptions = {
+        from: process.env.EMAIL_USER || 'your-email@gmail.com',
+        to: user.email,
+        subject: 'Welcome to MDM Attendnace App- Registration Successful',
+        html: getRegistrationEmailTemplate(user)
+      };
+      
+      await transporter.sendMail(mailOptions);
+      console.log('Welcome email sent successfully to:', user.email);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Don't fail the registration if email fails
+    }
+    
     // Generate auth token
     const token = user.generateAuthToken();
     
@@ -251,12 +268,438 @@ export const changePassword = async (req, res) => {
 // Configure nodemailer (you'll need to set up your email service)
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail', // or your email service
+    service: 'yahoo', // Yahoo email service
     auth: {
-      user: process.env.EMAIL_USER || 'your-email@gmail.com',
+      user: process.env.EMAIL_USER || 'your-email@yahoo.com',
       pass: process.env.EMAIL_PASS || 'your-app-password'
     }
   });
+};
+
+// Email templates
+const getRegistrationEmailTemplate = (user) => {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to MDM Attendnace App</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }
+            .container {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .header {
+                text-align: center;
+                border-bottom: 3px solid #007bff;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .logo {
+                font-size: 28px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 10px;
+            }
+            .welcome-text {
+                font-size: 24px;
+                color: #2c3e50;
+                margin-bottom: 20px;
+            }
+            .info-box {
+                background: #f8f9fa;
+                border-left: 4px solid #007bff;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+            }
+            .info-label {
+                font-weight: bold;
+                color: #555;
+                width: 40%;
+            }
+            .info-value {
+                color: #333;
+                width: 60%;
+            }
+            .status-badge {
+                display: inline-block;
+                padding: 8px 16px;
+                background: #ffc107;
+                color: #856404;
+                border-radius: 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .next-steps {
+                background: #e3f2fd;
+                border: 1px solid #2196f3;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+            }
+            .step {
+                margin: 10px 0;
+                padding-left: 20px;
+                position: relative;
+            }
+            .step::before {
+                content: "✓";
+                position: absolute;
+                left: 0;
+                color: #4caf50;
+                font-weight: bold;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                color: #666;
+                font-size: 14px;
+            }
+            .contact-info {
+                background: #f1f8e9;
+                border: 1px solid #8bc34a;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">MDM Attendance System</div>
+            </div>
+            
+            <h2 class="welcome-text">Welcome to MDM Attendnace App!</h2>
+            
+            <p>Dear <strong>${user.contactPersonName}</strong>,</p>
+            
+            <p>Thank you for registering with the Mid Day Meal Management System. Your account has been successfully created and is currently pending verification.</p>
+            
+            <div class="info-box">
+                <h3 style="margin-top: 0; color: #007bff;">📋 Registration Details</h3>
+                <div class="info-row">
+                    <span class="info-label">School Name:</span>
+                    <span class="info-value">${user.schoolName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">School Sub Name:</span>
+                    <span class="info-value">${user.schoolSubName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">School ID:</span>
+                    <span class="info-value">${user.schoolId}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Kendra Number:</span>
+                    <span class="info-value">${user.kendraNo}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Contact Person:</span>
+                    <span class="info-value">${user.contactPersonName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${user.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mobile:</span>
+                    <span class="info-value">${user.mobileNo}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Registration Date:</span>
+                    <span class="info-value">${new Date(user.createdAt).toLocaleDateString('en-IN', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Account Status:</span>
+                    <span class="info-value"><span class="status-badge">⏳ Pending Verification</span></span>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <h3 style="margin-top: 0; color: #1976d2;">🚀 What's Next?</h3>
+                <div class="step">Your registration details are being reviewed by our admin team</div>
+                <div class="step">You will receive a verification email once your account is approved</div>
+                <div class="step">After verification, you can access all MDM Attendnace App features</div>
+                <div class="step">You can login anytime to check your verification status</div>
+            </div>
+            
+            <div class="contact-info">
+                <h4 style="margin-top: 0; color: #689f38;">📞 Need Help?</h4>
+                <p style="margin-bottom: 0;">If you have any questions or need assistance, please contact our support team. We're here to help you get started with the MDM Attendnace App.</p>
+            </div>
+            
+            <div class="footer">
+                <p><strong>MDM Attendnace App Developer Team</strong></p>
+                <p style="font-size: 12px; color: #999;">
+                    This is an automated email. Please do not reply to this message.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+};
+
+const getVerificationEmailTemplate = (user, isVerified = true) => {
+  const statusColor = isVerified ? '#4caf50' : '#f44336';
+  const statusIcon = isVerified ? '✅' : '❌';
+  const statusText = isVerified ? 'VERIFIED' : 'VERIFICATION REVOKED';
+  const statusMessage = isVerified 
+    ? 'Congratulations! Your account has been successfully verified.' 
+    : 'Your account verification has been revoked.';
+  
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Account ${isVerified ? 'Verified' : 'Verification Revoked'} - MDM Attendnace App</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }
+            .container {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .header {
+                text-align: center;
+                border-bottom: 3px solid ${statusColor};
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .logo {
+                font-size: 28px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 10px;
+            }
+            .status-header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            .status-icon {
+                font-size: 48px;
+                margin-bottom: 15px;
+            }
+            .status-title {
+                font-size: 28px;
+                font-weight: bold;
+                color: ${statusColor};
+                margin-bottom: 10px;
+            }
+            .status-message {
+                font-size: 18px;
+                color: #555;
+            }
+            .info-box {
+                background: #f8f9fa;
+                border-left: 4px solid ${statusColor};
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+            }
+            .info-label {
+                font-weight: bold;
+                color: #555;
+                width: 40%;
+            }
+            .info-value {
+                color: #333;
+                width: 60%;
+            }
+            .status-badge {
+                display: inline-block;
+                padding: 8px 16px;
+                background: ${statusColor};
+                color: white;
+                border-radius: 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .features-box {
+                background: ${isVerified ? '#e8f5e8' : '#ffebee'};
+                border: 1px solid ${statusColor};
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+            }
+            .feature {
+                margin: 10px 0;
+                padding-left: 20px;
+                position: relative;
+            }
+            .feature::before {
+                content: "${isVerified ? '✓' : '✗'}";
+                position: absolute;
+                left: 0;
+                color: ${statusColor};
+                font-weight: bold;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                color: #666;
+                font-size: 14px;
+            }
+            .login-button {
+                display: inline-block;
+                background: ${statusColor};
+                color: white;
+                padding: 12px 30px;
+                text-decoration: none;
+                border-radius: 25px;
+                font-weight: bold;
+                margin: 20px 0;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">MDM Attendnace App</div>
+            </div>
+            
+            <div class="status-header">
+                <div class="status-icon">${statusIcon}</div>
+                <div class="status-title">${statusText}</div>
+                <div class="status-message">${statusMessage}</div>
+            </div>
+            
+            <p>Dear <strong>${user.contactPersonName}</strong>,</p>
+            
+            <p>${isVerified 
+              ? 'We are pleased to inform you that your MDM Attendnace App account has been verified and approved by our admin team. You now have full access to all system features.'
+              : 'We regret to inform you that your MDM Attendnace App account verification has been revoked. Please contact our admin team for more information.'
+            }</p>
+            
+            <div class="info-box">
+                <h3 style="margin-top: 0; color: ${statusColor};">📋 Account Information</h3>
+                <div class="info-row">
+                    <span class="info-label">School Name:</span>
+                    <span class="info-value">${user.schoolName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">School ID:</span>
+                    <span class="info-value">${user.schoolId}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Contact Person:</span>
+                    <span class="info-value">${user.contactPersonName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${user.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Verification Date:</span>
+                    <span class="info-value">${user.verifiedAt ? new Date(user.verifiedAt).toLocaleDateString('en-IN', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Account Status:</span>
+                    <span class="info-value"><span class="status-badge">${statusIcon} ${statusText}</span></span>
+                </div>
+            </div>
+            
+            ${isVerified ? `
+            <div class="features-box">
+                <h3 style="margin-top: 0; color: #2e7d32;">🎉 You Can Now Access:</h3>
+                <div class="feature">Create and manage daily attendance records</div>
+                <div class="feature">Generate attendance reports and Excel files</div>
+                <div class="feature">View semi-monthly attendance data</div>
+                <div class="feature">Update student registration information</div>
+                <div class="feature">Access all MDM Attendnace App features</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="login-button">
+                    🚀 Login to MDM Attendnace App
+                </a>
+            </div>
+            ` : `
+            <div class="features-box">
+                <h3 style="margin-top: 0; color: #c62828;">⚠️ Access Restrictions:</h3>
+                <div class="feature">Cannot create attendance records</div>
+                <div class="feature">Cannot generate reports</div>
+                <div class="feature">Limited access to system features</div>
+                <div class="feature">Contact admin for re-verification</div>
+            </div>
+            `}
+            
+            <div style="background: #f1f8e9; border: 1px solid #8bc34a; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                <h4 style="margin-top: 0; color: #689f38;">📞 Need Support?</h4>
+                <p style="margin-bottom: 0;">
+                    ${isVerified 
+                      ? 'If you have any questions about using the MDM Attendnace App, please don\'t hesitate to contact our support team.'
+                      : 'If you believe this is an error or need clarification, please contact our admin team immediately.'
+                    }
+                </p>
+            </div>
+            
+            <div class="footer">
+                <p><strong>MDM Attendnace App Developer Team</strong></p>
+                <p style="font-size: 12px; color: #999;">
+                    This is an automated email. Please do not reply to this message.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
 };
 
 export const forgotPassword = async (req, res) => {
@@ -289,17 +732,17 @@ export const forgotPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER || 'your-email@gmail.com',
       to: user.email,
-      subject: 'Password Reset Request - MDM System',
+      subject: 'Password Reset Request - MDM Attendnace App',
       html: `
         <h2>Password Reset Request</h2>
         <p>Hello ${user.schoolName},</p>
-        <p>You have requested to reset your password for the MDM System.</p>
+        <p>You have requested to reset your password for the MDM Attendnace App.</p>
         <p>Please click the link below to reset your password:</p>
         <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
         <p>This link will expire in 1 hour.</p>
         <p>If you did not request this password reset, please ignore this email.</p>
         <br>
-        <p>Best regards,<br>MDM System Team</p>
+        <p>Best regards,<br>MDM Attendnace App Team</p>
       `
     };
     
@@ -369,6 +812,23 @@ export const verifyUser = async (req, res) => {
     
     await user.save();
     
+    // Send verification email
+    try {
+      const transporter = createTransporter();
+      const mailOptions = {
+        from: process.env.EMAIL_USER || 'your-email@gmail.com',
+        to: user.email,
+        subject: '🎉 Account Verified - MDM Attendnace App',
+        html: getVerificationEmailTemplate(user, true)
+      };
+      
+      await transporter.sendMail(mailOptions);
+      console.log('Verification email sent successfully to:', user.email);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the verification if email fails
+    }
+    
     res.json({ 
       message: 'User verified successfully',
       user: {
@@ -405,6 +865,23 @@ export const unverifyUser = async (req, res) => {
     user.verifiedAt = undefined;
     
     await user.save();
+    
+    // Send unverification email
+    try {
+      const transporter = createTransporter();
+      const mailOptions = {
+        from: process.env.EMAIL_USER || 'your-email@gmail.com',
+        to: user.email,
+        subject: '⚠️ Account Verification Revoked - MDM Attendnace App',
+        html: getVerificationEmailTemplate(user, false)
+      };
+      
+      await transporter.sendMail(mailOptions);
+      console.log('Unverification email sent successfully to:', user.email);
+    } catch (emailError) {
+      console.error('Failed to send unverification email:', emailError);
+      // Don't fail the unverification if email fails
+    }
     
     res.json({ 
       message: 'User verification revoked successfully',

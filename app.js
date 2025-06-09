@@ -22,8 +22,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '2mb' })); // Increased limit for base64 images
+app.use(bodyParser.urlencoded({ extended: true, limit: '2mb' }));
 
 
 // Passport middleware

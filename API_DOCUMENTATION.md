@@ -87,7 +87,7 @@ VERIFICATION_VALIDITY_YEARS=1
     "contactPersonEmail": "jane@example.com",
     "isAdmin": false,
     "isVerified": false,
-    "verifiedAt": null,
+    "verifiedAt": null
     "createdAt": "2024-01-01T00:00:00.000Z",
     "updatedAt": "2024-01-01T00:00:00.000Z"
   }
