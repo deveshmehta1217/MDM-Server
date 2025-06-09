@@ -94,6 +94,27 @@ const UserSchema = new mongoose.Schema({
   verifiedAt: {
     type: Date
   },
+  paymentScreenshot: {
+    type: String, // Base64 string
+    validate: {
+      validator: function(v) {
+        if (!v) return true; // Optional field
+        // Check if it's a valid base64 string and size (max 1MB)
+        try {
+          const base64Data = v.replace(/^data:image\/[a-z]+;base64,/, '');
+          const buffer = Buffer.from(base64Data, 'base64');
+          const sizeInMB = buffer.length / (1024 * 1024);
+          return sizeInMB <= 1; // Max 1MB
+        } catch (error) {
+          return false;
+        }
+      },
+      message: 'Payment screenshot must be a valid base64 image and not exceed 1MB'
+    }
+  },
+  paymentScreenshotUploadedAt: {
+    type: Date
+  },
   isAdmin: {
     type: Boolean,
     default: false

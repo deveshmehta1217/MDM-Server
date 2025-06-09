@@ -65,6 +65,7 @@ VERIFICATION_VALIDITY_YEARS=1
   "contactPersonName": "Jane Smith",
   "contactPersonMobile": "9876543211",
   "contactPersonEmail": "jane@example.com",
+  "paymentScreenshot": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
   "isAdmin": false
 }
 ```
@@ -94,13 +95,14 @@ VERIFICATION_VALIDITY_YEARS=1
 ```
 
 **Validation Rules:**
-- All fields are required
+- All fields are required except `paymentScreenshot`
 - `mobileNo`: Exactly 10 digits, unique
 - `email`: Valid email format, unique
 - `schoolId`: Exactly 11 digits
 - `contactPersonMobile`: Exactly 10 digits
 - `contactPersonEmail`: Valid email format
 - `password`: Minimum 6 characters
+- `paymentScreenshot` (optional): Base64 encoded image (JPEG, JPG, PNG, GIF), maximum 1MB size
 
 ---
 
@@ -404,6 +406,71 @@ VERIFICATION_VALIDITY_YEARS=1
     "hasNext": true,
     "hasPrev": false
   }
+}
+```
+
+### 12. Get Payment Screenshot
+**GET** `/api/auth/payment-screenshot/:userId`
+
+**Description:** Get payment screenshot for a user (Admin only)
+
+**Headers:** `Authorization: Bearer <admin_token>`
+
+**URL Parameters:** `userId` (User ID)
+
+**Response (200):**
+```json
+{
+  "user": {
+    "_id": "user_id",
+    "schoolSubName": "school no 123",
+    "email": "john@example.com",
+    "schoolName": "ABC Primary School",
+    "schoolId": "12345678901",
+    "paymentScreenshot": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...",
+    "paymentScreenshotUploadedAt": "2024-01-01T10:00:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+```json
+{
+  "message": "No payment screenshot found for this user"
+}
+```
+
+---
+
+### 13. Delete Payment Screenshot
+**DELETE** `/api/auth/payment-screenshot/:userId`
+
+**Description:** Delete payment screenshot for a user after verification (Admin only)
+
+**Headers:** `Authorization: Bearer <admin_token>`
+
+**URL Parameters:** `userId` (User ID)
+
+**Response (200):**
+```json
+{
+  "message": "Payment screenshot deleted successfully",
+  "user": {
+    "_id": "user_id",
+    "schoolSubName": "school no 123",
+    "email": "john@example.com",
+    "schoolName": "ABC Primary School",
+    "schoolId": "12345678901",
+    "paymentScreenshot": null,
+    "paymentScreenshotUploadedAt": null
+  }
+}
+```
+
+**Error Responses:**
+```json
+{
+  "message": "No payment screenshot found for this user"
 }
 ```
 

@@ -11,7 +11,9 @@ import {
   verifyUser,
   unverifyUser,
   getVerificationStatus,
-  getAllUsers
+  getAllUsers,
+  deletePaymentScreenshot,
+  getPaymentScreenshot
 } from '../controllers/authController.js';
 import { authenticateWithSchool, requireAdmin } from '../middleware/auth.js';
 import { checkVerificationStatus, requireVerification } from '../middleware/verification.js';
@@ -72,5 +74,15 @@ router.post('/unverify/:userId', authenticateWithSchool, requireAdmin, unverifyU
 // @desc    Get all users with pagination and filtering (Admin only)
 // @access  Private
 router.get('/users', authenticateWithSchool, requireAdmin, getAllUsers);
+
+// @route   GET /api/auth/payment-screenshot/:userId
+// @desc    Get payment screenshot for a user (Admin only)
+// @access  Private
+router.get('/payment-screenshot/:userId', authenticateWithSchool, requireAdmin, getPaymentScreenshot);
+
+// @route   DELETE /api/auth/payment-screenshot/:userId
+// @desc    Delete payment screenshot for a user after verification (Admin only)
+// @access  Private
+router.delete('/payment-screenshot/:userId', authenticateWithSchool, requireAdmin, deletePaymentScreenshot);
 
 export default router;

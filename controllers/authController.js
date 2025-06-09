@@ -16,6 +16,7 @@ export const register = async (req, res) => {
       contactPersonName,
       contactPersonMobile,
       contactPersonEmail,
+      paymentScreenshot,
       isAdmin 
     } = req.body;
     
@@ -23,6 +24,27 @@ export const register = async (req, res) => {
     if (!schoolSubName || !password || !mobileNo || !email || !schoolName || !schoolId || 
         !kendraNo || !contactPersonName || !contactPersonMobile || !contactPersonEmail) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+    
+    // Validate payment screenshot if provided
+    if (paymentScreenshot) {
+      try {
+        // Check if it's a valid base64 string
+        const base64Data = paymentScreenshot.replace(/^data:image\/[a-z]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const sizeInMB = buffer.length / (1024 * 1024);
+        
+        if (sizeInMB > 1) {
+          return res.status(400).json({ message: 'Payment screenshot must not exceed 1MB' });
+        }
+        
+        // Validate base64 format
+        if (!paymentScreenshot.match(/^data:image\/(jpeg|jpg|png|gif);base64,/)) {
+          return res.status(400).json({ message: 'Payment screenshot must be a valid image in base64 format' });
+        }
+      } catch (error) {
+        return res.status(400).json({ message: 'Invalid payment screenshot format' });
+      }
     }
     
     // Check if user already exists (by email or mobile)
@@ -45,6 +67,8 @@ export const register = async (req, res) => {
       contactPersonName,
       contactPersonMobile,
       contactPersonEmail,
+      paymentScreenshot,
+      paymentScreenshotUploadedAt: paymentScreenshot ? new Date() : undefined,
       isAdmin: isAdmin || false
     });
     
@@ -471,6 +495,81 @@ export const getAllUsers = async (req, res) => {
         totalUsers: total,
         hasNext: skip + users.length < total,
         hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const deletePaymentScreenshot = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Only admin can delete payment screenshots
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    if (!user.paymentScreenshot) {
+      return res.status(400).json({ message: 'No payment screenshot found for this user' });
+    }
+    
+    // Remove payment screenshot and upload timestamp
+    user.paymentScreenshot = undefined;
+    user.paymentScreenshotUploadedAt = undefined;
+    
+    await user.save();
+    
+    res.json({ 
+      message: 'Payment screenshot deleted successfully',
+      user: {
+        _id: user._id,
+        schoolSubName: user.schoolSubName,
+        email: user.email,
+        schoolName: user.schoolName,
+        schoolId: user.schoolId,
+        paymentScreenshot: user.paymentScreenshot,
+        paymentScreenshotUploadedAt: user.paymentScreenshotUploadedAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+export const getPaymentScreenshot = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Only admin can view payment screenshots
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+    
+    const user = await User.findById(userId).select('schoolSubName email schoolName schoolId paymentScreenshot paymentScreenshotUploadedAt');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    if (!user.paymentScreenshot) {
+      return res.status(404).json({ message: 'No payment screenshot found for this user' });
+    }
+    
+    res.json({
+      user: {
+        _id: user._id,
+        schoolSubName: user.schoolSubName,
+        email: user.email,
+        schoolName: user.schoolName,
+        schoolId: user.schoolId,
+        paymentScreenshot: user.paymentScreenshot,
+        paymentScreenshotUploadedAt: user.paymentScreenshotUploadedAt
       }
     });
   } catch (error) {
