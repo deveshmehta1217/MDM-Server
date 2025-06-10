@@ -48,12 +48,12 @@ router.put('/change-password', authenticateWithSchool, requireVerification, chan
 // @route   POST /api/auth/forgot-password
 // @desc    Send password reset email
 // @access  Public
-router.post('/forgot-password', requireVerification, forgotPassword);
+router.post('/forgot-password', forgotPassword);
 
 // @route   POST /api/auth/reset-password
 // @desc    Reset password with token
 // @access  Public
-router.post('/reset-password', requireVerification, resetPassword);
+router.post('/reset-password', resetPassword);
 
 // @route   GET /api/auth/verification-status
 // @desc    Get user verification status
