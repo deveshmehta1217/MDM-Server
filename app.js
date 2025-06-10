@@ -13,6 +13,7 @@ import fs from 'fs';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/registeredStudents.js';
 import attendanceRoutes from './routes/attendance.js';
+import backupRoutes from './routes/backup.js';
 
 // Import passport config
 import configurePassport from './config/passport.js';
@@ -37,6 +38,7 @@ app.get('/test',(req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/registered', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/backup', backupRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

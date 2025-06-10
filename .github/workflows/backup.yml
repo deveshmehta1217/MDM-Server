@@ -1,0 +1,232 @@
+name: Automated Database Backup
+
+on:
+  schedule:
+    # Run daily at 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      backup_type:
+        description: 'Type of backup to perform'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - users
+          - attendance
+          - students
+      compress:
+        description: 'Compress backup data'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    name: Database Backup
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Perform Full Backup
+        if: ${{ github.event.inputs.backup_type == 'full' || github.event_name == 'schedule' }}
+        id: full_backup
+        run: |
+          echo "Performing full backup..."
+          response=$(curl -s -X POST "${{ secrets.VERCEL_APP_URL }}/api/backup/full" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -w "HTTPSTATUS:%{http_code}")
+          
+          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          content=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $content"
+          
+          if [ $http_code -eq 200 ]; then
+            echo "✅ Full backup completed successfully"
+            echo "backup_status=success" >> $GITHUB_OUTPUT
+            echo "backup_response=$content" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Full backup failed with status $http_code"
+            echo "backup_status=failed" >> $GITHUB_OUTPUT
+            echo "backup_error=$content" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Perform Specific Backup
+        if: ${{ github.event.inputs.backup_type != 'full' && github.event_name == 'workflow_dispatch' }}
+        id: specific_backup
+        run: |
+          backup_type="${{ github.event.inputs.backup_type }}"
+          compress="${{ github.event.inputs.compress }}"
+          
+          echo "Performing $backup_type backup (compress: $compress)..."
+          response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/export/$backup_type?compress=$compress" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -w "HTTPSTATUS:%{http_code}")
+          
+          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          content=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+          
+          echo "HTTP Status: $http_code"
+          echo "Response: $content"
+          
+          if [ $http_code -eq 200 ]; then
+            echo "✅ $backup_type backup completed successfully"
+            echo "backup_status=success" >> $GITHUB_OUTPUT
+            echo "backup_response=$content" >> $GITHUB_OUTPUT
+          else
+            echo "❌ $backup_type backup failed with status $http_code"
+            echo "backup_status=failed" >> $GITHUB_OUTPUT
+            echo "backup_error=$content" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Check Backup Health
+        id: health_check
+        run: |
+          echo "Checking backup system health..."
+          response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/health" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -w "HTTPSTATUS:%{http_code}")
+          
+          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          content=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+          
+          echo "Health Check Status: $http_code"
+          echo "Health Response: $content"
+          
+          if [ $http_code -eq 200 ]; then
+            echo "✅ Backup system is healthy"
+            echo "health_status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Backup system health check failed"
+            echo "health_status=unhealthy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check Google Drive Quota
+        id: quota_check
+        run: |
+          echo "Checking Google Drive quota..."
+          response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/drive/quota" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -w "HTTPSTATUS:%{http_code}")
+          
+          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          content=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+          
+          if [ $http_code -eq 200 ]; then
+            echo "✅ Google Drive quota check successful"
+            echo "$content" | jq -r '.data.quota | "Used: \(.usedFormatted) / \(.limitFormatted) (\(.usedPercentage)%)"'
+            echo "quota_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Google Drive quota check failed"
+            echo "quota_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Cleanup Old Backups
+        id: cleanup
+        run: |
+          echo "Cleaning up old backups (30+ days)..."
+          response=$(curl -s -X DELETE "${{ secrets.VERCEL_APP_URL }}/api/backup/drive/cleanup?days=30" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -w "HTTPSTATUS:%{http_code}")
+          
+          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+          content=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+          
+          if [ $http_code -eq 200 ]; then
+            deleted_count=$(echo "$content" | jq -r '.deletedCount // 0')
+            echo "✅ Cleanup completed - Deleted $deleted_count old backup files"
+            echo "cleanup_status=success" >> $GITHUB_OUTPUT
+            echo "deleted_count=$deleted_count" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Cleanup failed or no old backups to delete"
+            echo "cleanup_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Backup Summary
+        id: summary
+        run: |
+          echo "## 📊 Backup Summary - ${{ steps.date.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Backup Status
+          if [[ "${{ steps.full_backup.outputs.backup_status }}" == "success" || "${{ steps.specific_backup.outputs.backup_status }}" == "success" ]]; then
+            echo "### ✅ Backup Status: SUCCESS" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Backup Status: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Health Status
+          if [[ "${{ steps.health_check.outputs.health_status }}" == "healthy" ]]; then
+            echo "### 🟢 System Health: HEALTHY" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### 🟡 System Health: NEEDS ATTENTION" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Quota Status
+          if [[ "${{ steps.quota_check.outputs.quota_status }}" == "success" ]]; then
+            echo "### 💾 Google Drive: ACCESSIBLE" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ⚠️ Google Drive: ISSUES DETECTED" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Cleanup Status
+          if [[ "${{ steps.cleanup.outputs.cleanup_status }}" == "success" ]]; then
+            echo "### 🧹 Cleanup: ${{ steps.cleanup.outputs.deleted_count }} files removed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### 🧹 Cleanup: No action needed" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "**Backup completed at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send Notification on Failure
+        if: failure()
+        run: |
+          echo "🚨 Backup process failed!"
+          echo "Please check the logs and verify your backup system configuration."
+          # Here you could add email notification or Slack webhook
+          # curl -X POST -H 'Content-type: application/json' \
+          #   --data '{"text":"🚨 MDM Server backup failed on ${{ steps.date.outputs.date }}"}' \
+          #   ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Weekly backup verification job
+  verify:
+    runs-on: ubuntu-latest
+    name: Weekly Backup Verification
+    if: github.event_name == 'schedule' && github.event.schedule == '0 2 * * 0' # Sunday at 2 AM
+    
+    steps:
+      - name: Verify Backup Files
+        run: |
+          echo "Verifying backup files..."
+          response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/drive/files?limit=7" \
+            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}")
+          
+          file_count=$(echo "$response" | jq -r '.files | length')
+          echo "Found $file_count backup files in the last week"
+          
+          if [ $file_count -ge 5 ]; then
+            echo "✅ Backup verification passed - Sufficient backup files found"
+          else
+            echo "⚠️ Backup verification warning - Only $file_count backup files found"
+          fi
