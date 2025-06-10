@@ -3,6 +3,14 @@ import User from '../models/User.js';
 // Middleware to check if user is verified and verification is still valid
 export const requireVerification = async (req, res, next) => {
   try {
+    // Check if user is authenticated first
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ 
+        message: 'Authentication required. Please log in.',
+        code: 'AUTHENTICATION_REQUIRED'
+      });
+    }
+    
     const user = await User.findById(req.user.id);
     
     if (!user) {
@@ -26,6 +34,12 @@ export const requireVerification = async (req, res, next) => {
 // Middleware to check verification status but allow access (for informational purposes)
 export const checkVerificationStatus = async (req, res, next) => {
   try {
+    // Check if user is authenticated first
+    if (!req.user || !req.user.id) {
+      // Don't block the request, just continue without verification status
+      return next();
+    }
+    
     const user = await User.findById(req.user.id);
     
     if (user) {

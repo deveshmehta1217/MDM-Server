@@ -277,6 +277,240 @@ const createTransporter = () => {
 };
 
 // Email templates
+const getPasswordResetEmailTemplate = (user, resetUrl) => {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Password Reset Request - MDM Attendance App</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }
+            .container {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            .header {
+                text-align: center;
+                border-bottom: 3px solid #ff6b35;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+            .logo {
+                font-size: 28px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 10px;
+            }
+            .reset-icon {
+                font-size: 48px;
+                color: #ff6b35;
+                margin-bottom: 15px;
+            }
+            .reset-title {
+                font-size: 24px;
+                font-weight: bold;
+                color: #ff6b35;
+                margin-bottom: 10px;
+            }
+            .reset-message {
+                font-size: 16px;
+                color: #555;
+                margin-bottom: 30px;
+            }
+            .info-box {
+                background: #fff3e0;
+                border-left: 4px solid #ff6b35;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            .info-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+            }
+            .info-label {
+                font-weight: bold;
+                color: #555;
+                width: 40%;
+            }
+            .info-value {
+                color: #333;
+                width: 60%;
+            }
+            .reset-button {
+                display: inline-block;
+                background:#0070e8;
+                color: white;
+                padding: 15px 40px;
+                text-decoration: none;
+                border-radius: 30px;
+                font-weight: bold;
+                font-size: 16px;
+                margin: 20px 0;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+                transition: all 0.3s ease;
+            }
+            .reset-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+            }
+            .security-notice {
+                background: #e8f5e8;
+                border: 1px solid #4caf50;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+            }
+            .security-item {
+                margin: 10px 0;
+                padding-left: 20px;
+                position: relative;
+            }
+            .security-item::before {
+                content: "🔒";
+                position: absolute;
+                left: 0;
+                font-size: 14px;
+            }
+            .warning-box {
+                background: #fff3cd;
+                border: 1px solid #ffc107;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 20px 0;
+                text-align: center;
+            }
+            .footer {
+                text-align: center;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                color: #666;
+                font-size: 14px;
+            }
+            .contact-info {
+                background: #f1f8e9;
+                border: 1px solid #8bc34a;
+                border-radius: 8px;
+                padding: 15px;
+                margin: 20px 0;
+            }
+            .whatsapp-box {
+                background: #e8f5e8;
+                border: 1px solid #25d366;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+                text-align: center;
+            }
+            .whatsapp-button {
+                display: inline-block;
+                background: #25d366;
+                color: white;
+                padding: 12px 25px;
+                text-decoration: none;
+                border-radius: 25px;
+                font-weight: bold;
+                margin: 10px;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo">MDM Attendance System</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div class="reset-icon">🔐</div>
+                <div class="reset-title">Password Reset Request</div>
+                <div class="reset-message">We received a request to reset your password</div>
+            </div>
+            
+            <p>Hello <strong>${user.contactPersonName}</strong>,</p>
+            
+            <p>You have requested to reset your password for your MDM Attendance App account. If you didn't make this request, please ignore this email and your password will remain unchanged.</p>
+            
+            <div class="info-box">
+                <h3 style="margin-top: 0; color: #ff6b35;">📋 Account Details</h3>
+                <div class="info-row">
+                    <span class="info-label">School Name:</span>
+                    <span class="info-value">${user.schoolName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">School ID:</span>
+                    <span class="info-value">${user.schoolId}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">${user.email}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Request Time:</span>
+                    <span class="info-value">${new Date().toLocaleDateString('en-IN', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" class="reset-button">
+                    🔑 Reset My Password
+                </a>
+            </div>
+            
+            <div class="warning-box">
+                <h4 style="margin-top: 0; color: #856404;">⚠️ Important Security Notice</h4>
+                <p style="margin-bottom: 0; font-weight: bold;">This link will expire in 1 hour for your security.</p>
+            </div>
+            
+            <div class="security-notice">
+                <h4 style="margin-top: 0; color: #2e7d32;">🛡️ Security Tips</h4>
+                <div class="security-item">Choose a strong password with at least 8 characters</div>
+                <div class="security-item">Include uppercase, lowercase, numbers, and special characters</div>
+                <div class="security-item">Don't reuse passwords from other accounts</div>
+                <div class="security-item">Keep your password confidential and secure</div>
+            </div>
+            
+            <div class="contact-info">
+                <h4 style="margin-top: 0; color: #689f38;">📞 Need Help?</h4>
+                <p style="margin-bottom: 0;">If you're having trouble with the password reset or didn't request this change, please contact our support team immediately. We're here to help keep your account secure.</p>
+            </div>
+            
+            <div class="footer">
+                <p><strong>MDM Attendance App Security Team</strong></p>
+                <p style="font-size: 12px; color: #999;">
+                    This is an automated security email. Please do not reply to this message.<br>
+                    If you didn't request this password reset, please contact support immediately.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+};
+
 const getRegistrationEmailTemplate = (user) => {
   return `
     <!DOCTYPE html>
@@ -452,6 +686,16 @@ const getRegistrationEmailTemplate = (user) => {
                 <div class="step">You can login anytime to check your verification status</div>
             </div>
             
+            ${process.env.WHATSAPP_REGISTRATION_GROUP_LINK ? `
+            <div class="whatsapp-box">
+                <h4 style="margin-top: 0; color: #25d366;">💬 Join Our Community</h4>
+                <p style="margin-bottom: 15px;">Connect with other schools and get instant support by joining our WhatsApp group!</p>
+                <a href="${process.env.WHATSAPP_REGISTRATION_GROUP_LINK}" class="whatsapp-button">
+                    📱 Join WhatsApp Group
+                </a>
+            </div>
+            ` : ''}
+            
             <div class="contact-info">
                 <h4 style="margin-top: 0; color: #689f38;">📞 Need Help?</h4>
                 <p style="margin-bottom: 0;">If you have any questions or need assistance, please contact our support team. We're here to help you get started with the MDM Attendnace App.</p>
@@ -600,6 +844,25 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
                 margin: 20px 0;
                 text-align: center;
             }
+            .whatsapp-box {
+                background: #e8f5e8;
+                border: 1px solid #25d366;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 25px 0;
+                text-align: center;
+            }
+            .whatsapp-button {
+                display: inline-block;
+                background: #25d366;
+                color: white;
+                padding: 12px 25px;
+                text-decoration: none;
+                border-radius: 25px;
+                font-weight: bold;
+                margin: 10px;
+                font-size: 14px;
+            }
         </style>
     </head>
     <body>
@@ -680,6 +943,16 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
             </div>
             `}
             
+            ${isVerified && process.env.WHATSAPP_VERIFICATION_GROUP_LINK ? `
+            <div class="whatsapp-box">
+                <h4 style="margin-top: 0; color: #25d366;">🎉 Welcome to Our Verified Community!</h4>
+                <p style="margin-bottom: 15px;">Join our exclusive WhatsApp group for verified schools to get advanced support, share best practices, and connect with other verified institutions!</p>
+                <a href="${process.env.WHATSAPP_VERIFICATION_GROUP_LINK}" class="whatsapp-button">
+                    📱 Join Verified Schools Group
+                </a>
+            </div>
+            ` : ''}
+            
             <div style="background: #f1f8e9; border: 1px solid #8bc34a; border-radius: 8px; padding: 15px; margin: 20px 0;">
                 <h4 style="margin-top: 0; color: #689f38;">📞 Need Support?</h4>
                 <p style="margin-bottom: 0;">
@@ -733,17 +1006,7 @@ export const forgotPassword = async (req, res) => {
       from: process.env.EMAIL_USER || 'your-email@gmail.com',
       to: user.email,
       subject: 'Password Reset Request - MDM Attendnace App',
-      html: `
-        <h2>Password Reset Request</h2>
-        <p>Hello ${user.schoolName},</p>
-        <p>You have requested to reset your password for the MDM Attendnace App.</p>
-        <p>Please click the link below to reset your password:</p>
-        <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you did not request this password reset, please ignore this email.</p>
-        <br>
-        <p>Best regards,<br>MDM Attendnace App Team</p>
-      `
+      html: getPasswordResetEmailTemplate(user, resetUrl)
     };
     
     // Send email
