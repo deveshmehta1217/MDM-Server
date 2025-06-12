@@ -45,18 +45,33 @@ jobs:
         id: full_backup
         run: |
           echo "Performing full backup..."
-          response=$(curl -s -X POST "${{ secrets.VERCEL_APP_URL }}/api/backup/full" \
+          
+          url="${{ secrets.VERCEL_APP_URL }}/api/backup/full"
+          echo "➡️ Sending POST request to: $url"
+          
+          response=$(curl -s -X POST "$url" \
             -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -w "HTTPSTATUS:%{http_code}")
+            -w "\nHTTPSTATUS:%{http_code}" --dump-header headers.txt --trace-ascii trace.txt)
           
-          http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
-          content=$(echo $response | sed -e 's/HTTPSTATUS:.*//g')
+          http_code=$(echo "$response" | sed -n 's/.*HTTPSTATUS://p')
+          content=$(echo "$response" | sed -e 's/HTTPSTATUS:.*//g')
           
-          echo "HTTP Status: $http_code"
-          echo "Response: $content"
+          echo "🔁 Raw HTTP Response:"
+          echo "$content"
+          echo ""
           
-          if [ $http_code -eq 200 ]; then
+          echo "📄 Response Headers:"
+          cat headers.txt || echo "⚠️ Failed to read response headers"
+          
+          echo ""
+          echo "🐞 Curl Trace Output:"
+          cat trace.txt || echo "⚠️ Failed to read trace output"
+          
+          echo ""
+          echo "HTTP Status Code: $http_code"
+          
+          if [ "$http_code" -eq 200 ]; then
             echo "✅ Full backup completed successfully"
             echo "backup_status=success" >> $GITHUB_OUTPUT
             echo "backup_response=$content" >> $GITHUB_OUTPUT
@@ -64,8 +79,14 @@ jobs:
             echo "❌ Full backup failed with status $http_code"
             echo "backup_status=failed" >> $GITHUB_OUTPUT
             echo "backup_error=$content" >> $GITHUB_OUTPUT
+            
+            echo ""
+            echo "💡 TIP: A 405 usually means the method is not allowed."
+            echo "Double-check that your serverless function handles POST correctly at $url"
+            echo ""
             exit 1
           fi
+
 
       - name: Perform Specific Backup
         if: ${{ github.event.inputs.backup_type != 'full' && github.event_name == 'workflow_dispatch' }}
