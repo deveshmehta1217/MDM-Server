@@ -157,4 +157,3 @@ Devesh Mehta
 ## License
 
 ISC
-
