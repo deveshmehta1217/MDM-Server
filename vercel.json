@@ -3,7 +3,10 @@
     "builds": [
         {
             "src": "server.js",
-            "use": "@vercel/node"
+            "use": "@vercel/node",
+            "config": {
+                "maxLambdaSize": "50mb"
+            }
         },
         {
             "src": "assets/**",
@@ -23,5 +26,13 @@
                 "Access-Control-Allow-Origin": "*"
             }
         }
-    ]
+    ],
+    "functions": {
+        "server.js": {
+            "maxDuration": 30
+        }
+    },
+    "env": {
+        "NODE_ENV": "production"
+    }
 }

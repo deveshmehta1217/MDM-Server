@@ -1,21 +1,15 @@
 // server.js
 import app from './app.js';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { createIndexes } from './config/database.js';
+import { connectToDatabase } from './config/database.js';
 
 dotenv.config();
-// MongoDB connection
-const mongoURI = process.env.MONGO_URI;
 
-// Connect to MongoDB
-mongoose.connect(mongoURI)
-  .then(async () => {
-    console.log('MongoDB connected');
-    // Create database indexes for multi-tenant optimization
-    await createIndexes();
-  })
-  .catch(err => console.log(err));
+// Initialize database connection
+connectToDatabase().catch(err => {
+  console.error('Failed to connect to MongoDB:', err);
+  process.exit(1);
+});
 
 const PORT = process.env.PORT || 5000;
 

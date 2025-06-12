@@ -17,6 +17,8 @@ import backupRoutes from './routes/backup.js';
 
 // Import passport config
 import configurePassport from './config/passport.js';
+// Import database middleware
+import { ensureDbConnection } from './config/database.js';
 
 // Initialize app
 const app = express();
@@ -26,6 +28,8 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '2mb' })); // Increased limit for base64 images
 app.use(bodyParser.urlencoded({ extended: true, limit: '2mb' }));
 
+// Database connection middleware - ensures connection for each request
+app.use(ensureDbConnection);
 
 // Passport middleware
 app.use(passport.initialize());
@@ -35,6 +39,34 @@ configurePassport(passport);
 app.get('/test',(req, res) => {
   res.send('API is working');
 } );
+
+// Health check endpoint for database connection
+app.get('/api/health/db', async (req, res) => {
+  try {
+    await ensureDbConnection(req, res, () => {});
+    const state = mongoose.connection.readyState;
+    const states = {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting'
+    };
+    
+    res.json({
+      status: 'success',
+      connectionState: states[state],
+      readyState: state,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/registered', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
