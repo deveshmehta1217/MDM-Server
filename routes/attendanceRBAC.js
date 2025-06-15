@@ -16,7 +16,7 @@ import {
 } from '../controllers/attendanceController.js';
 import {
     authenticateSchool,
-    authenticateAdmin,
+    authenticatePrincipal,
     authenticateApprovedTeacher,
     requireClassAccess,
     requireUnlockedClass,
@@ -302,17 +302,17 @@ router.get('/:date',
 );
 
 // Legacy routes with RBAC (maintain backward compatibility)
-router.get('/report/daily/:date', authenticateAdmin, requireVerification, getDailyReport);
-router.get('/report/excel/daily/:date', authenticateAdmin, requireVerification, downloadDailyReportExcel);
-router.get('/report/data/daily/:date', authenticateAdmin, requireVerification, getDailyReportData);
-router.get('/report/semi-monthly/:year/:month/:half', authenticateAdmin, requireVerification, getSemiMonthlyReport);
-router.get('/report/excel/semi-monthly/:year/:month/:half', authenticateAdmin, requireVerification, downloadSemiMonthlyReportExcel);
-router.get('/report/data/semi-monthly/:year/:month/:half', authenticateAdmin, requireVerification, getSemiMonthlyReportData);
-router.get('/status/:year/:month/:half', authenticateAdmin, requireVerification, getAttendanceStatus);
+router.get('/report/daily/:date', authenticatePrincipal, requireVerification, getDailyReport);
+router.get('/report/excel/daily/:date', authenticatePrincipal, requireVerification, downloadDailyReportExcel);
+router.get('/report/data/daily/:date', authenticatePrincipal, requireVerification, getDailyReportData);
+router.get('/report/semi-monthly/:year/:month/:half', authenticatePrincipal, requireVerification, getSemiMonthlyReport);
+router.get('/report/excel/semi-monthly/:year/:month/:half', authenticatePrincipal, requireVerification, downloadSemiMonthlyReportExcel);
+router.get('/report/data/semi-monthly/:year/:month/:half', authenticatePrincipal, requireVerification, getSemiMonthlyReportData);
+router.get('/status/:year/:month/:half', authenticatePrincipal, requireVerification, getAttendanceStatus);
 
 // Legacy attendance operations (Principal only for now)
-router.post('/', authenticateAdmin, requireVerification, createAttendance);
-router.put('/:id', authenticateAdmin, requireVerification, updateAttendance);
-router.post('/save', authenticateAdmin, requireVerification, saveAttendance);
+router.post('/', authenticatePrincipal, requireVerification, createAttendance);
+router.put('/:id', authenticatePrincipal, requireVerification, updateAttendance);
+router.post('/save', authenticatePrincipal, requireVerification, saveAttendance);
 
 export default router;
