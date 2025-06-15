@@ -59,9 +59,6 @@ export const authenticateSchool = [authenticateWithSchool, authorizeSchool];
 // Combined middleware for admin operations
 export const authenticateAdmin = [authenticateWithSchool, authorizeSchool, requireAdmin];
 
-// Combined middleware for admin operations
-export const authenticatePrincipal = [authenticateWithSchool, authorizeSchool, authenticateRole(['PRINCIPAL'])];
-
 // Role-based authentication middleware
 export const authenticateRole = (allowedRoles) => {
   return (req, res, next) => {
@@ -76,6 +73,9 @@ export const authenticateRole = (allowedRoles) => {
     next();
   };
 };
+
+// Combined middleware for admin operations
+export const authenticatePrincipal = [authenticateWithSchool, authorizeSchool, authenticateRole(['PRINCIPAL'])];
 
 // Check if teacher has access to specific class
 export const requireClassAccess = async (req, res, next) => {
