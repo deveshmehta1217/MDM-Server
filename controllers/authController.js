@@ -2,6 +2,7 @@
 import User from '../models/User.js';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import jwt from 'jsonwebtoken';
 
 export const register = async (req, res) => {
   try {
@@ -1165,7 +1166,7 @@ export const unverifyUser = async (req, res) => {
 
 export const getVerificationStatus = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password -resetPasswordToken -resetPasswordExpires');
+    const user = await User.findOne({ schoolId: req.schoolId }).select('-password -resetPasswordToken -resetPasswordExpires');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -1310,6 +1311,60 @@ export const getPaymentScreenshot = async (req, res) => {
         schoolId: user.schoolId,
         paymentScreenshot: user.paymentScreenshot,
         paymentScreenshotUploadedAt: user.paymentScreenshotUploadedAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Enhanced login to include role information
+export const enhancedLogin = async (req, res) => {
+  try {
+    const { schoolId, password } = req.body;
+    
+    // Find user by schoolId
+    const user = await User.findOne({ schoolId });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    // Check password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    // Generate auth token with role information
+    const token = jwt.sign({ 
+      id: user._id, 
+      schoolId: user.schoolId, 
+      role: 'PRINCIPAL',
+      isAdmin: user.isAdmin,
+      isVerified: user.isVerified,
+      isVerificationValid: user.isVerificationValid()
+    }, process.env.JWT_SECRET || 'mdm-secret-key', {
+      expiresIn: '1d'
+    });
+    
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        schoolSubName: user.schoolSubName,
+        mobileNo: user.mobileNo,
+        email: user.email,
+        schoolName: user.schoolName,
+        schoolId: user.schoolId,
+        kendraNo: user.kendraNo,
+        contactPersonName: user.contactPersonName,
+        contactPersonMobile: user.contactPersonMobile,
+        contactPersonEmail: user.contactPersonEmail,
+        role: 'PRINCIPAL',
+        isAdmin: user.isAdmin,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
       }
     });
   } catch (error) {

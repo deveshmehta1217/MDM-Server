@@ -13,8 +13,10 @@ import {
   getVerificationStatus,
   getAllUsers,
   deletePaymentScreenshot,
-  getPaymentScreenshot
+  getPaymentScreenshot,
+  enhancedLogin
 } from '../controllers/authController.js';
+import { loginTeacher } from '../controllers/teacherController.js';
 import { authenticateWithSchool, requireAdmin } from '../middleware/auth.js';
 import { checkVerificationStatus, requireVerification } from '../middleware/verification.js';
 
@@ -29,6 +31,16 @@ router.post('/register', register);
 // @desc    Login user and return JWT token
 // @access  Public
 router.post('/login', login);
+
+// @route   POST /api/auth/principal/login
+// @desc    Enhanced principal login with role information
+// @access  Public
+router.post('/principal/login', enhancedLogin);
+
+// @route   POST /api/auth/teacher/login
+// @desc    Teacher login
+// @access  Public
+router.post('/teacher/login', loginTeacher);
 
 // @route   GET /api/auth/profile
 // @desc    Get current user profile (allowed without verification)

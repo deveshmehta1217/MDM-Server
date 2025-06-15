@@ -11,9 +11,12 @@ import fs from 'fs';
 
 // Import routes
 import authRoutes from './routes/auth.js';
-import userRoutes from './routes/registeredStudents.js';
 import attendanceRoutes from './routes/attendance.js';
+import registeredStudentsRoutes from './routes/registeredStudents.js';
 import backupRoutes from './routes/backup.js';
+import teacherRoutes from './routes/teachers.js';
+import schoolCodeRoutes from './routes/schoolCode.js';
+import classRoutes from './routes/classes.js';
 
 // Import passport config
 import configurePassport from './config/passport.js';
@@ -68,9 +71,12 @@ app.get('/api/health/db', async (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/registered', userRoutes);
+app.use('/api/registered', registeredStudentsRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/backup', backupRoutes);
+app.use('/api/teachers', teacherRoutes);
+app.use('/api/school-code', schoolCodeRoutes);
+app.use('/api/classes', classRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

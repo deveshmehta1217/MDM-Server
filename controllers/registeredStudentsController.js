@@ -1,12 +1,36 @@
 import RegisteredStudents from '../models/RegisteredStudents.js';
+import TeacherClassAssignment from '../models/TeacherClassAssignment.js';
 
 export const getRegisteredStudents = async (req, res) => {
     try {
         const { academicYear } = req.params;
-        const data = await RegisteredStudents.find({ 
+        const userRole = req.user?.role;
+        
+        let query = { 
             academicYear,
             schoolId: req.schoolId 
-        });
+        };
+        
+        // If teacher, filter by assigned classes only
+        if (userRole === 'TEACHER') {
+            const assignments = await TeacherClassAssignment.find({
+                teacherId: req.user.id,
+                schoolId: req.schoolId
+            });
+            
+            if (assignments.length === 0) {
+                return res.status(200).json([]);
+            }
+            
+            const classFilters = assignments.map(a => ({
+                standard: a.standard,
+                division: a.division
+            }));
+            
+            query.$or = classFilters;
+        }
+        
+        const data = await RegisteredStudents.find(query);
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -101,6 +125,7 @@ export const saveRegisteredStudent = async (req, res) => {
         );
         res.status(200).json(data);
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };

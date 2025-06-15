@@ -2,7 +2,7 @@ import Attendance from '../../models/Attendace.js';
 import ExcelJS from 'exceljs';
 import path from 'path';
 
-export const downloadDailyReportExcel = async (req, res) => {
+export const downloadDailyAlpaharReportExcel = async (req, res) => {
     try {
         const { date } = req.params;
         const queryDate = new Date(date);
@@ -12,7 +12,7 @@ export const downloadDailyReportExcel = async (req, res) => {
         });
 
         const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet(`દૈનિક હાજરી-${date}`);
+        const sheet = workbook.addWorksheet(`દૈનિક અલ્પાહાર-${date}`);
 
         const imageId = workbook.addImage({
             filename: path.resolve('./assets/logo.png'), // Adjust path as needed
@@ -42,7 +42,7 @@ export const downloadDailyReportExcel = async (req, res) => {
         sheet.getCell('A1').font = { bold: true, size: 20 };
 
         sheet.mergeCells('A2:AF2');
-        sheet.getCell('A2').value = `મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક`;
+        sheet.getCell('A2').value = `અલ્પાહાર યોજના : દૈનિક હાજરી પત્રક`;
         sheet.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
         sheet.getCell('A2').font = { bold: true, size: 20 };
 
@@ -66,7 +66,7 @@ export const downloadDailyReportExcel = async (req, res) => {
         sheet.getCell('L4').value = 'હાજર સંખ્યા';
         sheet.getCell('L4').alignment = { vertical: 'middle', horizontal: 'center' };
         sheet.mergeCells('V4:AE4');
-        sheet.getCell('V4').value = 'ભોજન લાભાર્થી સંખ્યા';
+        sheet.getCell('V4').value = 'અલ્પાહાર લાભાર્થી સંખ્યા';
         sheet.getCell('V4').alignment = { vertical: 'middle', horizontal: 'center' };
 
         sheet.mergeCells('AF4:AF6');
@@ -136,10 +136,12 @@ export const downloadDailyReportExcel = async (req, res) => {
             sum.female = 0;
 
             categoriesCode.forEach((category) => {
-                rowData.push(record.mealTakenStudents[category].male);
-                rowData.push(record.mealTakenStudents[category].female);
-                sum.male += record.mealTakenStudents[category].male;
-                sum.female += record.mealTakenStudents[category].female;
+                const alpaharMale = record.alpaharTakenStudents?.[category]?.male || 0;
+                const alpaharFemale = record.alpaharTakenStudents?.[category]?.female || 0;
+                rowData.push(alpaharMale);
+                rowData.push(alpaharFemale);
+                sum.male += alpaharMale;
+                sum.female += alpaharFemale;
             });
             rowData.push(sum.male, sum.female);
             rowData.push(''); // Signature column
@@ -276,12 +278,12 @@ export const downloadDailyReportExcel = async (req, res) => {
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader(
             'Content-Disposition',
-            `attachment; filename*=UTF-8''${encodeURIComponent('દૈનિકહાજરીરિપોર્ટ.xlsx')}`
+            `attachment; filename*=UTF-8''${encodeURIComponent('દૈનિકઅલ્પાહારરિપોર્ટ.xlsx')}`
         );
         await workbook.xlsx.write(res);
         res.end();
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Excel Report generation failed.' });
+        res.status(500).json({ message: 'Alpahar Excel Report generation failed.' });
     }
 };

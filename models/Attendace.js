@@ -177,6 +177,70 @@ const AttendanceSchema = new mongoose.Schema({
             },
         },
     },
+    alpaharTakenStudents: {
+        general: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        obc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        sc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        st: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+    },
+    takenBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'takenByRole'
+    },
+    takenByRole: {
+        type: String,
+        enum: ['PRINCIPAL', 'TEACHER'],
+        required: true
+    },
+    takenAt: {
+        type: Date,
+        default: Date.now
+    }
 }, {
     timestamps: true
 });
