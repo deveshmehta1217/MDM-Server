@@ -98,14 +98,16 @@ export const getSemiMonthlyReportData = async (req, res) => {
 
             const totals = {
                 presentStudents: initCategory(),
-                mealTakenStudents: initCategory()
+                mealTakenStudents: initCategory(),
+                alpaharTakenStudents: initCategory()
             };
 
             // Initialize all dates
             dateList.forEach(date => {
                 groupedByDate[date] = {
                     presentStudents: initCategory(),
-                    mealTakenStudents: initCategory()
+                    mealTakenStudents: initCategory(),
+                    alpaharTakenStudents: initCategory()
                 };
             });
 
@@ -114,23 +116,58 @@ export const getSemiMonthlyReportData = async (req, res) => {
                 const dateKey = new Date(record.date).toISOString().split('T')[0];
                 const categories = ['sc', 'st', 'obc', 'general'];
 
-                ['presentStudents', 'mealTakenStudents'].forEach(type => {
-                    const target = groupedByDate[dateKey][type];
-                    const sumTarget = totals[type];
+                // Present students
+                const presentTarget = groupedByDate[dateKey].presentStudents;
+                const presentSumTarget = totals.presentStudents;
 
-                    categories.forEach(cat => {
-                        const male = record[type][cat]?.male || 0;
-                        const female = record[type][cat]?.female || 0;
+                categories.forEach(cat => {
+                    const male = record.presentStudents[cat]?.male || 0;
+                    const female = record.presentStudents[cat]?.female || 0;
 
-                        target[cat].male += male;
-                        target[cat].female += female;
-                        sumTarget[cat].male += male;
-                        sumTarget[cat].female += female;
+                    presentTarget[cat].male += male;
+                    presentTarget[cat].female += female;
+                    presentSumTarget[cat].male += male;
+                    presentSumTarget[cat].female += female;
 
-                        target.totalMale += male;
-                        target.totalFemale += female;
-                        target.grandTotal += male + female;
-                    });
+                    presentTarget.totalMale += male;
+                    presentTarget.totalFemale += female;
+                    presentTarget.grandTotal += male + female;
+                });
+
+                // MDM taken students
+                const mealTarget = groupedByDate[dateKey].mealTakenStudents;
+                const mealSumTarget = totals.mealTakenStudents;
+
+                categories.forEach(cat => {
+                    const male = record.mealTakenStudents[cat]?.male || 0;
+                    const female = record.mealTakenStudents[cat]?.female || 0;
+
+                    mealTarget[cat].male += male;
+                    mealTarget[cat].female += female;
+                    mealSumTarget[cat].male += male;
+                    mealSumTarget[cat].female += female;
+
+                    mealTarget.totalMale += male;
+                    mealTarget.totalFemale += female;
+                    mealTarget.grandTotal += male + female;
+                });
+
+                // Alpahar taken students
+                const alpaharTarget = groupedByDate[dateKey].alpaharTakenStudents;
+                const alpaharSumTarget = totals.alpaharTakenStudents;
+
+                categories.forEach(cat => {
+                    const male = record.alpaharTakenStudents?.[cat]?.male || 0;
+                    const female = record.alpaharTakenStudents?.[cat]?.female || 0;
+
+                    alpaharTarget[cat].male += male;
+                    alpaharTarget[cat].female += female;
+                    alpaharSumTarget[cat].male += male;
+                    alpaharSumTarget[cat].female += female;
+
+                    alpaharTarget.totalMale += male;
+                    alpaharTarget.totalFemale += female;
+                    alpaharTarget.grandTotal += male + female;
                 });
             });
 

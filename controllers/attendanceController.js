@@ -2,11 +2,13 @@ import Attendance from '../models/Attendace.js';
 import RegisteredStudent from '../models/RegisteredStudents.js';
 import { getSemiMonthlyReport } from './attendanceControllers/semiMonthlyData.js';
 import { downloadSemiMonthlyReportExcel } from './attendanceControllers/semiMonthlyExcel.js';
+import { downloadSemiMonthlyAlpaharReportExcel } from './attendanceControllers/semiMonthlyAlpaharExcel.js';
 import { downloadDailyReportExcel } from './attendanceControllers/dailyExcel.js';
+import { downloadDailyAlpaharReportExcel } from './attendanceControllers/dailyAlpaharExcel.js';
 import { getSemiMonthlyReportData } from './attendanceControllers/semiMonthlyDataOnly.js';
 import { getDailyReportData } from './attendanceControllers/dailyDataOnly.js';
 
-export { getSemiMonthlyReport, downloadDailyReportExcel, downloadSemiMonthlyReportExcel, getSemiMonthlyReportData, getDailyReportData };
+export { getSemiMonthlyReport, downloadDailyReportExcel, downloadDailyAlpaharReportExcel, downloadSemiMonthlyReportExcel, downloadSemiMonthlyAlpaharReportExcel, getSemiMonthlyReportData, getDailyReportData };
 
 export const getAttendance = async (req, res) => {
     try {
@@ -40,7 +42,7 @@ export const getAttendanceByClass = async (req, res) => {
 
 export const createAttendance = async (req, res) => {
     try {
-        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
+        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, alpaharTakenStudents, date } = req.body;
         if (!date) {
             return res.status(400).json({ message: 'Date is required' });
         }
@@ -52,7 +54,8 @@ export const createAttendance = async (req, res) => {
             date: formattedDate,
             registeredStudents,
             presentStudents,
-            mealTakenStudents
+            mealTakenStudents,
+            alpaharTakenStudents
         });
         res.status(201).json(data);
     } catch (error) {
@@ -63,7 +66,7 @@ export const createAttendance = async (req, res) => {
 export const updateAttendance = async (req, res) => {
     try {
         const { id } = req.params;
-        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
+        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, alpaharTakenStudents, date } = req.body;
         if (!date) {
             return res.status(400).json({ message: 'Date is required' });
         }
@@ -81,7 +84,8 @@ export const updateAttendance = async (req, res) => {
             date: formattedDate,
             registeredStudents,
             presentStudents,
-            mealTakenStudents
+            mealTakenStudents,
+            alpaharTakenStudents
         }, { new: true });
         res.status(200).json(data);
     } catch (error) {
@@ -91,7 +95,7 @@ export const updateAttendance = async (req, res) => {
 
 export const saveAttendance = async (req, res) => {
     try {
-        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, date } = req.body;
+        const { standard, division, registeredStudents, presentStudents, mealTakenStudents, alpaharTakenStudents, date } = req.body;
         if (!date) {
             return res.status(400).json({ message: 'Date is required' });
         }
@@ -110,7 +114,8 @@ export const saveAttendance = async (req, res) => {
                 date: formattedDate,
                 registeredStudents,
                 presentStudents,
-                mealTakenStudents
+                mealTakenStudents,
+                alpaharTakenStudents
             },
             {
                 new: true,
@@ -168,13 +173,33 @@ export const getAttendanceStatus = async (req, res) => {
         const attendanceDocs = await Attendance.find({
             date: { $gte: startDate, $lte: endDate },
             schoolId: req.schoolId
-        }).select('standard division date');
+        }).select('standard division date mealTakenStudents alpaharTakenStudents');
 
-        // Build a lookup map
+        // Build lookup maps for different attendance types
         const attendanceMap = new Set();
+        const mdmMap = new Set();
+        const alpaharMap = new Set();
+
         for (const doc of attendanceDocs) {
             const dateStr = doc.date.toISOString().split('T')[0];
-            attendanceMap.add(`${dateStr}|${doc.standard}|${doc.division}`);
+            const key = `${dateStr}|${doc.standard}|${doc.division}`;
+            attendanceMap.add(key);
+
+            // Check if MDM data exists and has any non-zero values
+            const hasMdmData = doc.mealTakenStudents && Object.values(doc.mealTakenStudents).some(category => 
+                (category.male > 0 || category.female > 0)
+            );
+            if (hasMdmData) {
+                mdmMap.add(key);
+            }
+
+            // Check if Alpahar data exists and has any non-zero values
+            const hasAlpaharData = doc.alpaharTakenStudents && Object.values(doc.alpaharTakenStudents).some(category => 
+                (category.male > 0 || category.female > 0)
+            );
+            if (hasAlpaharData) {
+                alpaharMap.add(key);
+            }
         }
 
         // Prepare status array
@@ -184,11 +209,13 @@ export const getAttendanceStatus = async (req, res) => {
             const dateStr = dateObj.toISOString().split('T')[0];
 
             const attendanceRecords = registeredStudents.map(({ standard, division }) => {
-                const key = `${dateStr}|${standard}|${division}`;
+                const attendanceKey = `${dateStr}|${standard}|${division}`;
                 return {
                     standard,
                     division,
-                    attendanceTaken: attendanceMap.has(key)
+                    attendanceTaken: attendanceMap.has(attendanceKey),
+                    mdmTaken: mdmMap.has(attendanceKey),
+                    alpaharTaken: alpaharMap.has(attendanceKey)
                 };
             });
 
@@ -232,18 +259,42 @@ export const getDailyAttendanceStatus = async (req, res) => {
         const attendanceDocs = await Attendance.find({
             date: { $gte: startOfDay, $lte: endOfDay },
             schoolId: req.schoolId
-        }).select('standard division');
+        }).select('standard division mealTakenStudents alpaharTakenStudents');
 
-        const attendanceMap = new Set(
-            attendanceDocs.map(doc => `${doc.standard}|${doc.division}`)
-        );
+        // Create maps for different attendance types
+        const attendanceMap = new Set();
+        const mdmMap = new Set();
+        const alpaharMap = new Set();
+
+        attendanceDocs.forEach(doc => {
+            const key = `${doc.standard}|${doc.division}`;
+            attendanceMap.add(key);
+
+            // Check if MDM data exists and has any non-zero values
+            const hasMdmData = doc.mealTakenStudents && Object.values(doc.mealTakenStudents).some(category => 
+                (category.male > 0 || category.female > 0)
+            );
+            if (hasMdmData) {
+                mdmMap.add(key);
+            }
+
+            // Check if Alpahar data exists and has any non-zero values
+            const hasAlpaharData = doc.alpaharTakenStudents && Object.values(doc.alpaharTakenStudents).some(category => 
+                (category.male > 0 || category.female > 0)
+            );
+            if (hasAlpaharData) {
+                alpaharMap.add(key);
+            }
+        });
 
         const attendanceRecords = registeredStudents.map(({ standard, division }) => {
             const key = `${standard}|${division}`;
             return {
                 standard,
                 division,
-                attendanceTaken: attendanceMap.has(key)
+                attendanceTaken: attendanceMap.has(key),
+                mdmTaken: mdmMap.has(key),
+                alpaharTaken: alpaharMap.has(key)
             };
         });
 

@@ -1,61 +1,82 @@
-# MDM Attendance System API Documentation for Frontend Developers
+### 14. Create Attendance
+**POST** `/api/attendance`
 
-## Overview
+**Description:** Create a new attendance record (Requires verification)
 
-This document provides comprehensive API documentation for the MDM (Mid Day Meal) System. The system includes user management with verification requirements and attendance tracking functionality.
-
-## Base URL
-
-```
-http://your-server-url/api
-```
-
-## Authentication
-
-Most endpoints require authentication using JWT tokens. Include the token in the Authorization header:
-
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-## User Verification System
-
-The system implements a verification requirement for most operations:
-- Users can register, login, and manage their profile without verification
-- All attendance-related operations require valid verification
-- Verification validity is configurable (default: 1 year)
-- Only admins can verify/unverify users
-
-## Environment Variables
-
-```env
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key
-
-# Email Configuration (for password reset)
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-
-# Frontend URL (for password reset links)
-FRONTEND_URL=http://localhost:3000
-
-# Verification Validity (in years)
-VERIFICATION_VALIDITY_YEARS=1
-```
-
----
-
-## Authentication Endpoints
-
-### 1. Register User
-**POST** `/api/auth/register`
-
-**Description:** Register a new user account
+**Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
 ```json
 {
-  "schoolSubName": "school no 123",
+  "standard": 1,
+  "division": "A",
+  "date": "2024-01-15",
+  "registeredStudents": {
+    "sc": { "male": 10, "female": 8 },
+    "st": { "male": 5, "female": 7 },
+    "obc": { "male": 15, "female": 12 },
+    "general": { "male": 20, "female": 18 }
+  },
+  "presentStudents": {
+    "sc": { "male": 8, "female": 6 },
+    "st": { "male": 4, "female": 5 },
+    "obc": { "male": 12, "female": 10 },
+    "general": { "male": 18, "female": 16 }
+  },
+  "mealTakenStudents": {
+    "sc": { "male": 8, "female": 6 },
+    "st": { "male": 4, "female": 5 },
+    "obc": { "male": 12, "female": 10 },
+    "general": { "male": 18, "female": 16 }
+  },
+  "alpaharTakenStudents": {
+    "sc": { "male": 6, "female": 4 },
+    "st": { "male": 3, "female": 4 },
+    "obc": { "male": 10, "female": 8 },
+    "general": { "male": 15, "female": 14 }
+  }
+}
+```
+
+**Response (201):**
+```json
+{
+  "_id": "attendance_id",
+  "schoolId": "12345678901",
+  "standard": 1,
+  "division": "A",
+  "date": "2024-01-15T00:00:00.000Z",
+  "registeredStudents": {
+    "sc": { "male": 10, "female": 8 },
+    "st": { "male": 5, "female": 7 },
+    "obc": { "male": 15, "female": 12 },
+    "general": { "male": 20, "female": 18 }
+  },
+  "presentStudents": {
+    "sc": { "male": 8, "female": 6 },
+    "st": { "male": 4, "female": 5 },
+    "obc": { "male": 12, "female": 10 },
+    "general": { "male": 18, "female": 16 }
+  },
+  "mealTakenStudents": {
+    "sc": { "male": 8, "female": 6 },
+    "st": { "male": 4, "female": 5 },
+    "obc": { "male": 12, "female": 10 },
+    "general": { "male": 18, "female": 16 }
+  },
+  "alpaharTakenStudents": {
+    "sc": { "male": 6, "female": 4 },
+    "st": { "male": 3, "female": 4 },
+    "obc": { "male": 10, "female": 8 },
+    "general": { "male": 15, "female": 14 }
+  },
+  "takenBy": "user_id",
+  "takenByRole": "PRINCIPAL",
+  "takenAt": "2024-01-15T10:00:00.000Z",
+  "createdAt": "2024-01-15T10:00:00.000Z",
+  "updatedAt": "2024-01-15T10:00:00.000Z"
+}
+```
   "password": "password123",
   "mobileNo": "9876543210",
   "email": "john@example.com",
@@ -483,7 +504,7 @@ VERIFICATION_VALIDITY_YEARS=1
 ### 12. Get Daily Report Data
 **GET** `/api/attendance/report/data/daily/:date`
 
-**Description:** Get daily attendance report data for Excel generation
+**Description:** Get daily attendance report data for Excel generation (includes both MDM and Alpahar data)
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -517,17 +538,23 @@ VERIFICATION_VALIDITY_YEARS=1
           "st": { "male": 4, "female": 5 },
           "obc": { "male": 12, "female": 10 },
           "general": { "male": 18, "female": 16 }
+        },
+        "alpaharTakenStudents": {
+          "sc": { "male": 6, "female": 4 },
+          "st": { "male": 3, "female": 4 },
+          "obc": { "male": 10, "female": 8 },
+          "general": { "male": 15, "female": 14 }
         }
       },
-      "rowData": ["1 - A", 10, 8, 5, 7, 15, 12, 20, 18, 50, 45, 95, 8, 6, 4, 5, 12, 10, 18, 16, 42, 37, 79, 8, 6, 4, 5, 12, 10, 18, 16, 42, 37, 79],
+      "rowData": ["1 - A", 10, 8, 5, 7, 15, 12, 20, 18, 50, 45, 95, 8, 6, 4, 5, 12, 10, 18, 16, 42, 37, 79, 8, 6, 4, 5, 12, 10, 18, 16, 42, 37, 79, 6, 4, 3, 4, 10, 8, 15, 14, 34, 30, 64],
       "isLastOfStd1to4": false,
       "isLastOfStd5to8": false
     }
   ],
   "totals": {
-    "std1to4": [/* array of totals */],
-    "std5to8": [/* array of totals */],
-    "grandTotal": [/* array of grand totals */]
+    "std1to4": [/* array of totals including alpahar data */],
+    "std5to8": [/* array of totals including alpahar data */],
+    "grandTotal": [/* array of grand totals including alpahar data */]
   },
   "timestamp": "15/01/2024, 02:30:00 PM"
 }
@@ -535,10 +562,62 @@ VERIFICATION_VALIDITY_YEARS=1
 
 ---
 
+### 12a. Download Daily MDM Excel Report
+**GET** `/api/attendance/report/excel/daily/mdm/:date`
+
+**Description:** Download daily MDM (Mid Day Meal) attendance report as Excel file
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:** `date` (YYYY-MM-DD format)
+
+**Example:** `/api/attendance/report/excel/daily/mdm/2024-01-15`
+
+**Response (200):** Excel file download with headers:
+- `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- `Content-Disposition: attachment; filename="દૈનિકહાજરીરિપોર્ટ.xlsx"`
+
+**Excel Content:**
+- School header with logo
+- Title: "મધ્યાહ્ન ભોજન યોજના : દૈનિક હાજરી પત્રક"
+- Date information
+- Columns: Standard, Registered Students, Present Students, MDM Beneficiaries
+- Data breakdown by category (SC, ST, OBC, General) and gender
+- Totals for standards 1-4, 5-8, and grand total
+- Teacher signature column
+
+---
+
+### 12b. Download Daily Alpahar Excel Report
+**GET** `/api/attendance/report/excel/daily/alpahar/:date`
+
+**Description:** Download daily Alpahar attendance report as Excel file
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:** `date` (YYYY-MM-DD format)
+
+**Example:** `/api/attendance/report/excel/daily/alpahar/2024-01-15`
+
+**Response (200):** Excel file download with headers:
+- `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- `Content-Disposition: attachment; filename="દૈનિકઅલ્પાહારરિપોર્ટ.xlsx"`
+
+**Excel Content:**
+- School header with logo
+- Title: "અલ્પાહાર યોજના : દૈનિક હાજરી પત્રક"
+- Date information
+- Columns: Standard, Registered Students, Present Students, Alpahar Beneficiaries
+- Data breakdown by category (SC, ST, OBC, General) and gender
+- Totals for standards 1-4, 5-8, and grand total
+- Teacher signature column
+
+---
+
 ### 13. Get Semi-Monthly Report Data
 **GET** `/api/attendance/report/data/semi-monthly/:year/:month/:half`
 
-**Description:** Get semi-monthly attendance report data for Excel generation
+**Description:** Get semi-monthly attendance report data for Excel generation (includes both MDM and Alpahar data)
 
 **Headers:** `Authorization: Bearer <token>`
 
@@ -585,6 +664,15 @@ VERIFICATION_VALIDITY_YEARS=1
             "totalMale": 42,
             "totalFemale": 37,
             "grandTotal": 79
+          },
+          "alpaharTakenStudents": {
+            "sc": { "male": 6, "female": 4 },
+            "st": { "male": 3, "female": 4 },
+            "obc": { "male": 10, "female": 8 },
+            "general": { "male": 15, "female": 14 },
+            "totalMale": 34,
+            "totalFemale": 30,
+            "grandTotal": 64
           }
         }
       },
@@ -606,6 +694,15 @@ VERIFICATION_VALIDITY_YEARS=1
           "totalMale": 630,
           "totalFemale": 555,
           "grandTotal": 1185
+        },
+        "alpaharTakenStudents": {
+          "sc": { "male": 90, "female": 60 },
+          "st": { "male": 45, "female": 60 },
+          "obc": { "male": 150, "female": 120 },
+          "general": { "male": 225, "female": 210 },
+          "totalMale": 510,
+          "totalFemale": 450,
+          "grandTotal": 960
         }
       },
       "dateList": ["2024-01-01", "2024-01-02", "..."]
@@ -622,6 +719,64 @@ VERIFICATION_VALIDITY_YEARS=1
   }
 }
 ```
+
+---
+
+### 13a. Download Semi-Monthly MDM Excel Report
+**GET** `/api/attendance/report/excel/semi-monthly/mdm/:year/:month/:half`
+
+**Description:** Download semi-monthly MDM (Mid Day Meal) attendance report as Excel file
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:**
+- `year`: Year (e.g., 2024)
+- `month`: Month (1-12)
+- `half`: Half of month (1 or 2)
+
+**Example:** `/api/attendance/report/excel/semi-monthly/mdm/2024/1/1`
+
+**Response (200):** Excel file download with headers:
+- `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- `Content-Disposition: attachment; filename="Patrak_Report_1_1.xlsx"`
+
+**Excel Content:**
+- Multiple worksheets for different standard ranges (બાલવાટિકા, ધોરણ ૧ થી ૫, ધોરણ ૬ થી ૮)
+- School header with logo and date information
+- Registered students data
+- Daily present students data for the half-month period
+- Daily MDM beneficiaries data for the half-month period
+- Totals and subtotals with professional formatting
+- Gujarati language support
+
+---
+
+### 13b. Download Semi-Monthly Alpahar Excel Report
+**GET** `/api/attendance/report/excel/semi-monthly/alpahar/:year/:month/:half`
+
+**Description:** Download semi-monthly Alpahar attendance report as Excel file
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:**
+- `year`: Year (e.g., 2024)
+- `month`: Month (1-12)
+- `half`: Half of month (1 or 2)
+
+**Example:** `/api/attendance/report/excel/semi-monthly/alpahar/2024/1/1`
+
+**Response (200):** Excel file download with headers:
+- `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- `Content-Disposition: attachment; filename="Alpahar_Patrak_Report_1_1.xlsx"`
+
+**Excel Content:**
+- Multiple worksheets for different standard ranges (બાલવાટિકા, ધોરણ ૧ થી ૫, ધોરણ ૬ થી ૮)
+- School header with logo and date information
+- Registered students data
+- Daily present students data for the half-month period
+- Daily Alpahar beneficiaries data for the half-month period
+- Totals and subtotals with professional formatting
+- Gujarati language support
 
 ---
 
@@ -775,6 +930,124 @@ VERIFICATION_VALIDITY_YEARS=1
 - `division`: Division/Section
 
 **Response (200):** Single attendance record (same structure as above)
+
+---
+
+### 19. Get Daily Attendance Status (Enhanced)
+**GET** `/api/attendance/status/:date`
+
+**Description:** Get daily attendance status with MDM and Alpahar tracking (Requires verification)
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:** `date` (YYYY-MM-DD format)
+
+**Example:** `/api/attendance/status/2024-01-15`
+
+**Response (200):**
+```json
+{
+  "registeredClasses": [
+    { "standard": 1, "division": "A" },
+    { "standard": 2, "division": "B" }
+  ],
+  "status": {
+    "date": "2024-01-15",
+    "attendance": [
+      {
+        "standard": 1,
+        "division": "A",
+        "attendanceTaken": true,
+        "mdmTaken": true,
+        "alpaharTaken": false
+      },
+      {
+        "standard": 2,
+        "division": "B",
+        "attendanceTaken": true,
+        "mdmTaken": false,
+        "alpaharTaken": true
+      }
+    ]
+  }
+}
+```
+
+**Status Fields:**
+- `attendanceTaken`: Whether any attendance record exists for the class
+- `mdmTaken`: Whether MDM (Mid Day Meal) data has been recorded with non-zero values
+- `alpaharTaken`: Whether Alpahar data has been recorded with non-zero values
+
+---
+
+### 20. Get Semi-Monthly Attendance Status (Enhanced)
+**GET** `/api/attendance/status/:year/:month/:half`
+
+**Description:** Get attendance status for semi-monthly period with MDM and Alpahar tracking (Requires verification)
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:**
+- `year`: Year (e.g., 2024)
+- `month`: Month (1-12)
+- `half`: Half of month (1 or 2)
+
+**Example:** `/api/attendance/status/2024/1/1`
+
+**Response (200):**
+```json
+{
+  "registeredClasses": [
+    { "standard": 1, "division": "A" },
+    { "standard": 2, "division": "B" }
+  ],
+  "status": [
+    {
+      "date": "2024-01-01",
+      "attendance": [
+        {
+          "standard": 1,
+          "division": "A",
+          "attendanceTaken": true,
+          "mdmTaken": true,
+          "alpaharTaken": false
+        },
+        {
+          "standard": 2,
+          "division": "B",
+          "attendanceTaken": true,
+          "mdmTaken": false,
+          "alpaharTaken": true
+        }
+      ]
+    },
+    {
+      "date": "2024-01-02",
+      "attendance": [
+        {
+          "standard": 1,
+          "division": "A",
+          "attendanceTaken": false,
+          "mdmTaken": false,
+          "alpaharTaken": false
+        },
+        {
+          "standard": 2,
+          "division": "B",
+          "attendanceTaken": true,
+          "mdmTaken": true,
+          "alpaharTaken": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Status Fields:**
+- `attendanceTaken`: Whether any attendance record exists for the class on that date
+- `mdmTaken`: Whether MDM (Mid Day Meal) data has been recorded with non-zero values
+- `alpaharTaken`: Whether Alpahar data has been recorded with non-zero values
 
 ---
 
@@ -1686,4 +1959,1283 @@ curl -X DELETE "http://localhost:5000/api/backup/drive/cleanup?days=30" \
 
 ---
 
-This documentation provides everything frontend developers need to integrate with the MDM Attendance System API, including authentication, user management, verification system, attendance functionality, and the comprehensive backup system.
+## NEW RBAC ENDPOINTS
+
+### Enhanced Authentication Endpoints
+
+### 32. Enhanced Principal Login
+**POST** `/api/auth/principal/login`
+
+**Description:** Enhanced principal login with role information
+
+**Request Body:**
+```json
+{
+  "schoolId": "12345678901",
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "token": "jwt_token_here",
+  "user": {
+    "_id": "user_id",
+    "schoolSubName": "school no 123",
+    "mobileNo": "9876543210",
+    "email": "john@example.com",
+    "schoolName": "ABC Primary School",
+    "schoolId": "12345678901",
+    "role": "PRINCIPAL",
+    "isAdmin": true,
+    "isVerified": true,
+    "teacherCount": 5,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 33. Teacher Login
+**POST** `/api/auth/teacher/login`
+
+**Description:** Teacher login with mobile number (mobile numbers are unique across the system)
+
+**Request Body:**
+```json
+{
+  "mobileNo": "9876543210",
+  "password": "password123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "token": "jwt_token_here",
+  "user": {
+    "_id": "teacher_id",
+    "name": "Teacher Name",
+    "email": "teacher@example.com",
+    "mobileNo": "9876543210",
+    "schoolId": "12345678901",
+    "schoolName": "ABC Primary School",
+    "role": "TEACHER",
+    "isApproved": true,
+    "isActive": true,
+    "assignedClasses": [
+      { "standard": 1, "division": "A" },
+      { "standard": 2, "division": "B" }
+    ]
+  }
+}
+```
+
+---
+
+## Teacher Management Endpoints
+
+### 34. Teacher Self-Registration
+**POST** `/api/teachers/register`
+
+**Description:** Teacher self-registration using school code
+
+**Request Body:**
+```json
+{
+  "name": "Teacher Name",
+  "email": "teacher@example.com",
+  "mobileNo": "9876543210",
+  "password": "password123",
+  "schoolCode": "SCH001"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Registration successful. Awaiting principal approval.",
+  "teacherId": "teacher_id"
+}
+```
+
+---
+
+### 35. Teacher Forgot Password
+**POST** `/api/teachers/forgot-password`
+
+**Description:** Send password reset email to teacher
+
+**Request Body:**
+```json
+{
+  "email": "teacher@example.com",
+  "schoolId": "12345678901"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password reset email sent successfully"
+}
+```
+
+---
+
+### 36. Teacher Reset Password
+**POST** `/api/teachers/reset-password`
+
+**Description:** Reset teacher password using token
+
+**Request Body:**
+```json
+{
+  "token": "reset_token_from_email",
+  "newPassword": "newpassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password reset successfully"
+}
+```
+
+---
+
+### 37. Teacher Change Password
+**PUT** `/api/teachers/change-password`
+
+**Description:** Change teacher password (authenticated)
+
+**Headers:** `Authorization: Bearer <teacher_token>`
+
+**Request Body:**
+```json
+{
+  "currentPassword": "oldpassword123",
+  "newPassword": "newpassword123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+---
+
+### 38. Get Pending Teachers (Principal Only)
+**GET** `/api/teachers/pending`
+
+**Description:** Get teachers awaiting approval
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "teachers": [
+    {
+      "_id": "teacher_id",
+      "name": "Teacher Name",
+      "email": "teacher@example.com",
+      "mobileNo": "9876543210",
+      "schoolCode": "SCH001",
+      "isApproved": false,
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 39. Get All Teachers (Principal Only)
+**GET** `/api/teachers/`
+
+**Description:** Get all teachers with assigned classes
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "teachers": [
+    {
+      "_id": "teacher_id",
+      "name": "Teacher Name",
+      "email": "teacher@example.com",
+      "mobileNo": "9876543210",
+      "isApproved": true,
+      "isActive": true,
+      "assignedClasses": [
+        { "standard": 1, "division": "A" },
+        { "standard": 2, "division": "B" }
+      ],
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### 40. Approve/Reject Teacher (Principal Only)
+**POST** `/api/teachers/:teacherId/approve`
+
+**Description:** Approve or reject teacher registration
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Request Body:**
+```json
+{
+  "action": "approve"
+}
+```
+
+**Available Actions:** `approve`, `reject`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Teacher approved successfully"
+}
+```
+
+---
+
+### 41. Toggle Teacher Status (Principal Only)
+**PATCH** `/api/teachers/:teacherId/toggle-status`
+
+**Description:** Activate or deactivate teacher
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Teacher activated successfully",
+  "teacher": {
+    "_id": "teacher_id",
+    "name": "Teacher Name",
+    "isActive": true
+  }
+}
+```
+
+---
+
+### 42. Get Teacher Profile (Teacher Only)
+**GET** `/api/teachers/profile`
+
+**Description:** Get teacher profile with assigned classes
+
+**Headers:** `Authorization: Bearer <teacher_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "teacher": {
+    "_id": "teacher_id",
+    "name": "Teacher Name",
+    "email": "teacher@example.com",
+    "mobileNo": "9876543210",
+    "schoolId": "12345678901",
+    "schoolName": "ABC Primary School",
+    "isApproved": true,
+    "isActive": true,
+    "assignedClasses": [
+      { "standard": 1, "division": "A" },
+      { "standard": 2, "division": "B" }
+    ]
+  }
+}
+```
+
+---
+
+## School Code Management Endpoints
+
+### 43. Generate School Code (Principal Only)
+**POST** `/api/school-code/generate`
+
+**Description:** Generate new school code for teacher registration
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Request Body:**
+```json
+{
+  "expiryHours": 72
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "School code generated successfully",
+  "schoolCode": {
+    "_id": "code_id",
+    "code": "SCH001",
+    "schoolId": "12345678901",
+    "expiresAt": "2024-01-04T00:00:00.000Z",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 44. Get Active School Code (Principal Only)
+**GET** `/api/school-code/`
+
+**Description:** Get current active school code
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "schoolCode": {
+    "_id": "code_id",
+    "code": "SCH001",
+    "schoolId": "12345678901",
+    "expiresAt": "2024-01-04T00:00:00.000Z",
+    "isActive": true,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 45. Validate School Code (Public)
+**GET** `/api/school-code/validate/:code`
+
+**Description:** Validate school code for teacher registration
+
+**URL Parameters:** `code` (School code)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "valid": true,
+  "schoolName": "ABC Primary School",
+  "expiresAt": "2024-01-04T00:00:00.000Z"
+}
+```
+
+---
+
+### 46. Deactivate School Code (Principal Only)
+**DELETE** `/api/school-code/:code`
+
+**Description:** Deactivate a school code
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "School code deactivated successfully"
+}
+```
+
+---
+
+### 47. Get School Code History (Principal Only)
+**GET** `/api/school-code/history`
+
+**Description:** Get history of all school codes
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "codes": [
+    {
+      "_id": "code_id",
+      "code": "SCH001",
+      "isActive": false,
+      "expiresAt": "2024-01-04T00:00:00.000Z",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "usageCount": 3
+    }
+  ]
+}
+```
+
+---
+
+### 48. Extend School Code Expiry (Principal Only)
+**PATCH** `/api/school-code/:code/extend`
+
+**Description:** Extend school code expiry
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Request Body:**
+```json
+{
+  "additionalHours": 24
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "School code expiry extended successfully",
+  "newExpiryDate": "2024-01-05T00:00:00.000Z"
+}
+```
+
+---
+
+## Class Management Endpoints
+
+### 49. Bulk Assign Classes (Principal Only)
+**POST** `/api/classes/assign-bulk`
+
+**Description:** Assign multiple classes to multiple teachers
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Request Body:**
+```json
+{
+  "assignments": [
+    {
+      "teacherId": "teacher_id_1",
+      "classes": [
+        { "standard": 1, "division": "A" },
+        { "standard": 1, "division": "B" }
+      ]
+    },
+    {
+      "teacherId": "teacher_id_2",
+      "classes": [
+        { "standard": 2, "division": "A" }
+      ]
+    }
+  ]
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Bulk class assignment completed",
+  "results": {
+    "successful": 3,
+    "failed": 0,
+    "details": [
+      {
+        "teacherId": "teacher_id_1",
+        "teacherName": "Teacher 1",
+        "assignedClasses": 2,
+        "success": true
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 50. Bulk Remove Class Assignments (Principal Only)
+**DELETE** `/api/classes/assign-bulk`
+
+**Description:** Remove multiple class assignments
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Request Body:**
+```json
+{
+  "assignments": [
+    {
+      "teacherId": "teacher_id_1",
+      "classes": [
+        { "standard": 1, "division": "A" }
+      ]
+    }
+  ]
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Bulk class removal completed",
+  "results": {
+    "successful": 1,
+    "failed": 0
+  }
+}
+```
+
+---
+
+### 51. Bulk Lock/Unlock Classes (Principal Only)
+**POST** `/api/classes/lock-bulk`
+
+**Description:** Lock or unlock multiple classes
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Request Body:**
+```json
+{
+  "classes": [
+    { "standard": 1, "division": "A" },
+    { "standard": 2, "division": "B" }
+  ],
+  "action": "lock"
+}
+```
+
+**Available Actions:** `lock`, `unlock`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Bulk class lock operation completed",
+  "results": {
+    "successful": 2,
+    "failed": 0,
+    "details": [
+      {
+        "standard": 1,
+        "division": "A",
+        "action": "locked",
+        "success": true
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 52. Get Class Lock Status
+**GET** `/api/classes/lock-status`
+
+**Description:** Get lock status of all classes
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "classLockStatus": [
+    {
+      "standard": 1,
+      "division": "A",
+      "isLocked": true,
+      "lockedAt": "2024-01-01T10:00:00.000Z",
+      "lockedBy": "principal_id"
+    }
+  ]
+}
+```
+
+---
+
+### 53. Get Class Assignments Overview (Principal Only)
+**GET** `/api/classes/overview`
+
+**Description:** Get complete overview of class assignments with many-to-many relationships
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "overview": [
+    {
+      "standard": 1,
+      "division": "A",
+      "academicYear": "2024-2025",
+      "assignedTeachers": [
+        {
+          "teacherId": "teacher_id_1",
+          "teacherName": "Teacher One",
+          "teacherEmail": "teacher1@example.com",
+          "assignedAt": "2024-01-01T00:00:00.000Z",
+          "assignedBy": {
+            "_id": "principal_id",
+            "schoolName": "ABC Primary School",
+            "email": "principal@example.com"
+          }
+        },
+        {
+          "teacherId": "teacher_id_2",
+          "teacherName": "Teacher Two",
+          "teacherEmail": "teacher2@example.com",
+          "assignedAt": "2024-01-02T00:00:00.000Z",
+          "assignedBy": {
+            "_id": "principal_id",
+            "schoolName": "ABC Primary School",
+            "email": "principal@example.com"
+          }
+        }
+      ],
+      "isLocked": false,
+      "lastLockedStatusUpdatedAt": null,
+      "lockedBy": null,
+      "hasTeacher": true,
+      "teacherCount": 2
+    },
+    {
+      "standard": 2,
+      "division": "A",
+      "academicYear": "2024-2025",
+      "assignedTeachers": [],
+      "isLocked": false,
+      "lastLockedStatusUpdatedAt": null,
+      "lockedBy": null,
+      "hasTeacher": false,
+      "teacherCount": 0
+    }
+  ]
+}
+```
+
+---
+
+### 54. Get Teacher Class Assignments
+**GET** `/api/classes/teacher/:teacherId/assignments`
+
+**Description:** Get specific teacher's class assignments
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "teacher": {
+    "teacherId": "teacher_id",
+    "teacherName": "Teacher Name",
+    "assignedClasses": [
+      {
+        "assignmentId": "assignment_id",
+        "standard": 1,
+        "division": "A",
+        "assignedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 55. Remove Specific Class Assignment (Principal Only)
+**DELETE** `/api/classes/assignment/:assignmentId`
+
+**Description:** Remove a specific class assignment
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Class assignment removed successfully"
+}
+```
+
+---
+
+## Enhanced Attendance Endpoints
+
+### 56. Take Attendance with RBAC
+**POST** `/api/attendance/take`
+
+**Description:** Take attendance with role-based access control (supports both ALPAHAR and MDM data in single record)
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
+{
+  "standard": 1,
+  "division": "A",
+  "date": "2024-01-15",
+  "registeredStudents": {
+    "sc": { "male": 10, "female": 8 },
+    "st": { "male": 5, "female": 7 },
+    "obc": { "male": 15, "female": 12 },
+    "general": { "male": 20, "female": 18 }
+  },
+  "presentStudents": {
+    "sc": { "male": 8, "female": 6 },
+    "st": { "male": 4, "female": 5 },
+    "obc": { "male": 12, "female": 10 },
+    "general": { "male": 18, "female": 16 }
+  },
+  "mealTakenStudents": {
+    "sc": { "male": 8, "female": 6 },
+    "st": { "male": 4, "female": 5 },
+    "obc": { "male": 12, "female": 10 },
+    "general": { "male": 18, "female": 16 }
+  },
+  "alpaharTakenStudents": {
+    "sc": { "male": 6, "female": 4 },
+    "st": { "male": 3, "female": 4 },
+    "obc": { "male": 10, "female": 8 },
+    "general": { "male": 15, "female": 14 }
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Attendance recorded successfully",
+  "attendanceId": "attendance_id",
+  "attendance": {
+    "_id": "attendance_id",
+    "schoolId": "12345678901",
+    "standard": 1,
+    "division": "A",
+    "date": "2024-01-15",
+    "registeredStudents": {
+      "sc": { "male": 10, "female": 8 },
+      "st": { "male": 5, "female": 7 },
+      "obc": { "male": 15, "female": 12 },
+      "general": { "male": 20, "female": 18 }
+    },
+    "presentStudents": {
+      "sc": { "male": 8, "female": 6 },
+      "st": { "male": 4, "female": 5 },
+      "obc": { "male": 12, "female": 10 },
+      "general": { "male": 18, "female": 16 }
+    },
+    "mealTakenStudents": {
+      "sc": { "male": 8, "female": 6 },
+      "st": { "male": 4, "female": 5 },
+      "obc": { "male": 12, "female": 10 },
+      "general": { "male": 18, "female": 16 }
+    },
+    "alpaharTakenStudents": {
+      "sc": { "male": 6, "female": 4 },
+      "st": { "male": 3, "female": 4 },
+      "obc": { "male": 10, "female": 8 },
+      "general": { "male": 15, "female": 14 }
+    },
+    "takenBy": "teacher_id",
+    "takenByRole": "TEACHER",
+    "takenAt": "2024-01-15T10:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 57. Enhanced Daily Attendance Status
+**GET** `/api/attendance/daily-status/:date`
+
+**Description:** Get enhanced daily status with role-based filtering
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:** `date` (YYYY-MM-DD format)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "date": "2024-01-15",
+  "registeredClasses": [
+    { "standard": 1, "division": "A" },
+    { "standard": 2, "division": "B" }
+  ],
+  "status": {
+    "date": "2024-01-15",
+    "attendance": [
+      {
+        "standard": 1,
+        "division": "A",
+        "alpaharTaken": true,
+        "mdmTaken": false,
+        "alpaharTakenBy": "Teacher Name",
+        "mdmTakenBy": null,
+        "alpaharTakenAt": "2024-01-15T09:00:00.000Z",
+        "mdmTakenAt": null
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 58. Get Attendance by Type and Class
+**GET** `/api/attendance/:date/:attendanceType/:standard/:division`
+
+**Description:** Get specific attendance by type and class
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:**
+- `date`: Date (YYYY-MM-DD format)
+- `attendanceType`: ALPAHAR or MDM
+- `standard`: Standard/Class number
+- `division`: Division/Section
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "attendance": {
+    "_id": "attendance_id",
+    "standard": 1,
+    "division": "A",
+    "date": "2024-01-15",
+    "attendanceType": "ALPAHAR",
+    "takenBy": {
+      "_id": "teacher_id",
+      "name": "Teacher Name",
+      "email": "teacher@example.com"
+    },
+    "registeredStudents": {
+      "sc": { "male": 10, "female": 8 }
+    },
+    "presentStudents": {
+      "sc": { "male": 8, "female": 6 }
+    },
+    "mealTakenStudents": {
+      "sc": { "male": 8, "female": 6 }
+    }
+  }
+}
+```
+
+---
+
+### 59. Enhanced Save Attendance
+**POST** `/api/attendance/save-enhanced`
+
+**Description:** Enhanced save attendance with RBAC support
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:** Same as Take Attendance
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "ALPAHAR attendance saved successfully",
+  "data": {
+    "_id": "attendance_id",
+    "attendanceType": "ALPAHAR",
+    "takenBy": "teacher_id",
+    "takenByRole": "TEACHER"
+  }
+}
+```
+
+---
+
+## Enhanced Registered Students Endpoints
+
+### 60. Get Registered Students (Role-Based)
+**GET** `/api/registered/:academicYear`
+
+**Description:** Get registered students with role-based filtering
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:** `academicYear` (e.g., 2024-2025)
+
+**Response (200):**
+```json
+[
+  {
+    "_id": "student_id",
+    "schoolId": "12345678901",
+    "standard": 1,
+    "division": "A",
+    "academicYear": "2024-2025",
+    "counts": {
+      "general": { "male": 20, "female": 18 },
+      "obc": { "male": 15, "female": 12 },
+      "sc": { "male": 10, "female": 8 },
+      "st": { "male": 5, "female": 7 }
+    }
+  }
+]
+```
+
+**Note:** Teachers only see classes they are assigned to.
+
+---
+
+### 61. Enhanced Save Registered Students
+**POST** `/api/registered/save`
+
+**Description:** Save registered students with class lock enforcement
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
+{
+  "standard": 1,
+  "division": "A",
+  "academicYear": "2024-2025",
+  "counts": {
+    "general": { "male": 20, "female": 18 },
+    "obc": { "male": 15, "female": 12 },
+    "sc": { "male": 10, "female": 8 },
+    "st": { "male": 5, "female": 7 }
+  }
+}
+```
+
+**Response (200):**
+```json
+{
+  "_id": "student_id",
+  "schoolId": "12345678901",
+  "standard": 1,
+  "division": "A",
+  "academicYear": "2024-2025",
+  "counts": {
+    "general": { "male": 20, "female": 18 },
+    "obc": { "male": 15, "female": 12 },
+    "sc": { "male": 10, "female": 8 },
+    "st": { "male": 5, "female": 7 }
+  }
+}
+```
+
+**Note:** Teachers can only modify unlocked classes they are assigned to.
+
+---
+
+## Enhanced Backup Endpoints
+
+### 62. Export Teachers Data (Principal Only)
+**GET** `/api/backup/export/teachers`
+
+**Description:** Export teachers data
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Query Parameters:**
+- `compress` (optional): Compress data (true/false)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Exported 5 teacher records",
+  "compressed": false,
+  "data": {
+    "exportType": "teachers",
+    "exportDate": "2024-01-15T10:00:00.000Z",
+    "totalRecords": 5,
+    "data": [
+      {
+        "_id": "teacher_id",
+        "name": "Teacher Name",
+        "email": "teacher@example.com",
+        "mobileNo": "9876543210",
+        "schoolId": "12345678901",
+        "isApproved": true,
+        "isActive": true,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 63. Export Class Assignments (Principal Only)
+**GET** `/api/backup/export/class-assignments`
+
+**Description:** Export class assignments data
+
+**Headers:** `Authorization: Bearer <principal_token>`
+
+**Query Parameters:**
+- `compress` (optional): Compress data (true/false)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Exported 12 class assignment records",
+  "compressed": false,
+  "data": {
+    "exportType": "classAssignments",
+    "exportDate": "2024-01-15T10:00:00.000Z",
+    "totalRecords": 12,
+    "data": [
+      {
+        "_id": "assignment_id",
+        "teacherId": {
+          "_id": "teacher_id",
+          "name": "Teacher Name",
+          "email": "teacher@example.com",
+          "mobileNo": "9876543210"
+        },
+        "standard": 1,
+        "division": "A",
+        "schoolId": "12345678901",
+        "assignedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+---
+
+### 64. Enhanced Backup Health Check
+**GET** `/api/backup/health`
+
+**Description:** Enhanced health check with RBAC status
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "healthy",
+    "timestamp": "2024-01-15T10:00:00.000Z",
+    "database": {
+      "connected": true,
+      "collections": {
+        "users": 25,
+        "attendance": 1500,
+        "registeredStudents": 900,
+        "teachers": 15,
+        "teacherClassAssignments": 45,
+        "classLockStatus": 20,
+        "schoolCodes": 5
+      }
+    },
+    "rbac": {
+      "enabled": true,
+      "version": "2.0.0",
+      "features": [
+        "teacher-management",
+        "class-assignments",
+        "dual-attendance",
+        "class-locks"
+      ]
+    }
+  }
+}
+```
+
+---
+
+## RBAC Integration Examples
+
+### JavaScript/React - Teacher Management
+
+```javascript
+// Teacher Management API functions
+const teacherAPI = {
+  // Teacher self-registration
+  register: async (teacherData) => {
+    return await apiCall('/teachers/register', {
+      method: 'POST',
+      body: JSON.stringify(teacherData)
+    });
+  },
+
+  // Teacher login
+  login: async (mobileNo, password, schoolId) => {
+    return await apiCall('/auth/teacher/login', {
+      method: 'POST',
+      body: JSON.stringify({ mobileNo, password, schoolId })
+    });
+  },
+
+  // Get teacher profile
+  getProfile: async () => {
+    return await apiCall('/teachers/profile');
+  },
+
+  // Change password
+  changePassword: async (currentPassword, newPassword) => {
+    return await apiCall('/teachers/change-password', {
+      method: 'PUT',
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+  },
+
+  // Forgot password
+  forgotPassword: async (email, schoolId) => {
+    return await apiCall('/teachers/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, schoolId })
+    });
+  },
+
+  // Reset password
+  resetPassword: async (token, newPassword) => {
+    return await apiCall('/teachers/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword })
+    });
+  }
+};
+
+// Principal Management API functions
+const principalAPI = {
+  // Get pending teachers
+  getPendingTeachers: async () => {
+    return await apiCall('/teachers/pending');
+  },
+
+  // Approve/reject teacher
+  approveTeacher: async (teacherId, action) => {
+    return await apiCall(`/teachers/${teacherId}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ action })
+    });
+  },
+
+  // Get all teachers
+  getAllTeachers: async () => {
+    return await apiCall('/teachers/');
+  },
+
+  // Generate school code
+  generateSchoolCode: async (expiryHours = 72) => {
+    return await apiCall('/school-code/generate', {
+      method: 'POST',
+      body: JSON.stringify({ expiryHours })
+    });
+  },
+
+  // Bulk assign classes
+  bulkAssignClasses: async (assignments) => {
+    return await apiCall('/classes/assign-bulk', {
+      method: 'POST',
+      body: JSON.stringify({ assignments })
+    });
+  },
+
+  // Bulk lock/unlock classes
+  bulkLockClasses: async (classes, action) => {
+    return await apiCall('/classes/lock-bulk', {
+      method: 'POST',
+      body: JSON.stringify({ classes, action })
+    });
+  }
+};
+
+// Enhanced Attendance API functions
+const attendanceAPI = {
+  // Take attendance with RBAC
+  takeAttendance: async (attendanceData) => {
+    return await apiCall('/attendance/take', {
+      method: 'POST',
+      body: JSON.stringify(attendanceData)
+    });
+  },
+
+  // Get enhanced daily status
+  getDailyStatus: async (date) => {
+    return await apiCall(`/attendance/daily-status/${date}`);
+  },
+
+  // Get attendance by type
+  getAttendanceByType: async (date, attendanceType, standard, division) => {
+    return await apiCall(`/attendance/${date}/${attendanceType}/${standard}/${division}`);
+  }
+};
+```
+
+### Example: Teacher Registration Flow
+
+```javascript
+const TeacherRegistration = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    mobileNo: '',
+    password: '',
+    schoolCode: ''
+  });
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      const result = await teacherAPI.register(formData);
+      alert('Registration successful! Awaiting principal approval.');
+      // Redirect to login or waiting page
+    } catch (error) {
+      if (error.message.includes('Invalid or expired school code')) {
+        alert('Invalid school code. Please contact your principal.');
+      } else {
+        alert('Registration failed: ' + error.message);
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={handleRegister}>
+      <input
+        type="text"
+        placeholder="Full Name"
+        value={formData.name}
+        onChange={(e) => setFormData({...formData, name: e.target.value})}
+        required
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        value={formData.email}
+        onChange={(e) => setFormData({...formData, email: e.target.value})}
+        required
+      />
+      <input
+        type="tel"
+        placeholder="

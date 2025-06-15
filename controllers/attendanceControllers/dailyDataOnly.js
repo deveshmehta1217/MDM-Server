@@ -17,9 +17,9 @@ export const getDailyReportData = async (req, res) => {
         });
 
         const categoriesCode = ['sc', 'st', 'obc', 'general'];
-        const totalStd1to4 = Array(30).fill(0);
-        const totalStd5to8 = Array(30).fill(0);
-        const grandTotal = Array(30).fill(0);
+        const totalStd1to4 = Array(40).fill(0);
+        const totalStd5to8 = Array(40).fill(0);
+        const grandTotal = Array(40).fill(0);
 
         // Process each record and calculate totals
         const processedData = data.map((record, idx) => {
@@ -50,12 +50,25 @@ export const getDailyReportData = async (req, res) => {
             sum.male = 0;
             sum.female = 0;
 
-            // Meal taken students
+            // Meal taken students (MDM)
             categoriesCode.forEach((category) => {
                 rowData.push(record.mealTakenStudents[category].male);
                 rowData.push(record.mealTakenStudents[category].female);
                 sum.male += record.mealTakenStudents[category].male;
                 sum.female += record.mealTakenStudents[category].female;
+            });
+            rowData.push(sum.male, sum.female);
+            sum.male = 0;
+            sum.female = 0;
+
+            // Alpahar taken students
+            categoriesCode.forEach((category) => {
+                const alpaharMale = record.alpaharTakenStudents?.[category]?.male || 0;
+                const alpaharFemale = record.alpaharTakenStudents?.[category]?.female || 0;
+                rowData.push(alpaharMale);
+                rowData.push(alpaharFemale);
+                sum.male += alpaharMale;
+                sum.female += alpaharFemale;
             });
             rowData.push(sum.male, sum.female);
 

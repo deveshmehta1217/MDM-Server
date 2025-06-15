@@ -2,7 +2,7 @@ import Attendance from '../../models/Attendace.js';
 import ExcelJS from 'exceljs';
 import path from 'path';
 
-export const downloadSemiMonthlyReportExcel = async (req, res) => {
+export const downloadSemiMonthlyAlpaharReportExcel = async (req, res) => {
     try {
         const { month, year, half } = req.params;
         
@@ -173,14 +173,14 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
 
             const totals = {
                 presentStudents: initCategory(),
-                mealTakenStudents: initCategory()
+                alpaharTakenStudents: initCategory()
             };
 
             // Initialize all dates
             dateList.forEach(date => {
                 groupedByDate[date] = {
                     presentStudents: initCategory(),
-                    mealTakenStudents: initCategory()
+                    alpaharTakenStudents: initCategory()
                 };
             });
 
@@ -189,23 +189,40 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
                 const dateKey = new Date(record.date).toISOString().split('T')[0];
                 const categories = ['sc', 'st', 'obc', 'general'];
 
-                ['presentStudents', 'mealTakenStudents'].forEach(type => {
-                    const target = groupedByDate[dateKey][type];
-                    const sumTarget = totals[type];
+                // Present students
+                const presentTarget = groupedByDate[dateKey].presentStudents;
+                const presentSumTarget = totals.presentStudents;
 
-                    categories.forEach(cat => {
-                        const male = record[type][cat]?.male || 0;
-                        const female = record[type][cat]?.female || 0;
+                categories.forEach(cat => {
+                    const male = record.presentStudents[cat]?.male || 0;
+                    const female = record.presentStudents[cat]?.female || 0;
 
-                        target[cat].male += male;
-                        target[cat].female += female;
-                        sumTarget[cat].male += male;
-                        sumTarget[cat].female += female;
+                    presentTarget[cat].male += male;
+                    presentTarget[cat].female += female;
+                    presentSumTarget[cat].male += male;
+                    presentSumTarget[cat].female += female;
 
-                        target.totalMale += male;
-                        target.totalFemale += female;
-                        target.grandTotal += male + female;
-                    });
+                    presentTarget.totalMale += male;
+                    presentTarget.totalFemale += female;
+                    presentTarget.grandTotal += male + female;
+                });
+
+                // Alpahar taken students
+                const alpaharTarget = groupedByDate[dateKey].alpaharTakenStudents;
+                const alpaharSumTarget = totals.alpaharTakenStudents;
+
+                categories.forEach(cat => {
+                    const male = record.alpaharTakenStudents?.[cat]?.male || 0;
+                    const female = record.alpaharTakenStudents?.[cat]?.female || 0;
+
+                    alpaharTarget[cat].male += male;
+                    alpaharTarget[cat].female += female;
+                    alpaharSumTarget[cat].male += male;
+                    alpaharSumTarget[cat].female += female;
+
+                    alpaharTarget.totalMale += male;
+                    alpaharTarget.totalFemale += female;
+                    alpaharTarget.grandTotal += male + female;
                 });
             });
 
@@ -309,7 +326,7 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
                 cell.font = { bold: true };
             });
 
-            // Starting row for meal taken students, based on half
+            // Starting row for alpahar taken students, based on half
             currentRow = half === '1' ? 33 : 34;
             Object.entries(groupedByDate).forEach(([dateStr, data]) => {
                 const row = worksheet.getRow(currentRow);
@@ -317,17 +334,17 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
                     day: '2-digit',
                 });
 
-                row.getCell(2).value = data.mealTakenStudents.sc.male;
-                row.getCell(3).value = data.mealTakenStudents.sc.female;
-                row.getCell(4).value = data.mealTakenStudents.st.male;
-                row.getCell(5).value = data.mealTakenStudents.st.female;
-                row.getCell(6).value = data.mealTakenStudents.obc.male;
-                row.getCell(7).value = data.mealTakenStudents.obc.female;
-                row.getCell(8).value = data.mealTakenStudents.general.male;
-                row.getCell(9).value = data.mealTakenStudents.general.female;
-                row.getCell(10).value = data.mealTakenStudents.totalMale;
-                row.getCell(11).value = data.mealTakenStudents.totalFemale;
-                row.getCell(12).value = data.mealTakenStudents.grandTotal;
+                row.getCell(2).value = data.alpaharTakenStudents.sc.male;
+                row.getCell(3).value = data.alpaharTakenStudents.sc.female;
+                row.getCell(4).value = data.alpaharTakenStudents.st.male;
+                row.getCell(5).value = data.alpaharTakenStudents.st.female;
+                row.getCell(6).value = data.alpaharTakenStudents.obc.male;
+                row.getCell(7).value = data.alpaharTakenStudents.obc.female;
+                row.getCell(8).value = data.alpaharTakenStudents.general.male;
+                row.getCell(9).value = data.alpaharTakenStudents.general.female;
+                row.getCell(10).value = data.alpaharTakenStudents.totalMale;
+                row.getCell(11).value = data.alpaharTakenStudents.totalFemale;
+                row.getCell(12).value = data.alpaharTakenStudents.grandTotal;
 
                 row.eachCell((cell) => {
                     if (typeof cell.value === 'number') {
@@ -339,22 +356,22 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
                 currentRow++;
             });
 
-            // Meal taken students total row
-            const mealTakenTotalsRow = worksheet.getRow(currentRow);
-            mealTakenTotalsRow.getCell(1).value = 'Total';
-            mealTakenTotalsRow.getCell(2).value = totals.mealTakenStudents.sc.male;
-            mealTakenTotalsRow.getCell(3).value = totals.mealTakenStudents.sc.female;
-            mealTakenTotalsRow.getCell(4).value = totals.mealTakenStudents.st.male;
-            mealTakenTotalsRow.getCell(5).value = totals.mealTakenStudents.st.female;
-            mealTakenTotalsRow.getCell(6).value = totals.mealTakenStudents.obc.male;
-            mealTakenTotalsRow.getCell(7).value = totals.mealTakenStudents.obc.female;
-            mealTakenTotalsRow.getCell(8).value = totals.mealTakenStudents.general.male;
-            mealTakenTotalsRow.getCell(9).value = totals.mealTakenStudents.general.female;
-            mealTakenTotalsRow.getCell(10).value = totals.mealTakenStudents.totalMale;
-            mealTakenTotalsRow.getCell(11).value = totals.mealTakenStudents.totalFemale;
-            mealTakenTotalsRow.getCell(12).value = totals.mealTakenStudents.grandTotal;
+            // Alpahar taken students total row
+            const alpaharTakenTotalsRow = worksheet.getRow(currentRow);
+            alpaharTakenTotalsRow.getCell(1).value = 'Total';
+            alpaharTakenTotalsRow.getCell(2).value = totals.alpaharTakenStudents.sc.male;
+            alpaharTakenTotalsRow.getCell(3).value = totals.alpaharTakenStudents.sc.female;
+            alpaharTakenTotalsRow.getCell(4).value = totals.alpaharTakenStudents.st.male;
+            alpaharTakenTotalsRow.getCell(5).value = totals.alpaharTakenStudents.st.female;
+            alpaharTakenTotalsRow.getCell(6).value = totals.alpaharTakenStudents.obc.male;
+            alpaharTakenTotalsRow.getCell(7).value = totals.alpaharTakenStudents.obc.female;
+            alpaharTakenTotalsRow.getCell(8).value = totals.alpaharTakenStudents.general.male;
+            alpaharTakenTotalsRow.getCell(9).value = totals.alpaharTakenStudents.general.female;
+            alpaharTakenTotalsRow.getCell(10).value = totals.alpaharTakenStudents.totalMale;
+            alpaharTakenTotalsRow.getCell(11).value = totals.alpaharTakenStudents.totalFemale;
+            alpaharTakenTotalsRow.getCell(12).value = totals.alpaharTakenStudents.grandTotal;
 
-            mealTakenTotalsRow.eachCell((cell) => {
+            alpaharTakenTotalsRow.eachCell((cell) => {
                 if (typeof cell.value === 'number') {
                     cell.numFmt = '#,##0';
                 }
@@ -378,16 +395,14 @@ export const downloadSemiMonthlyReportExcel = async (req, res) => {
 
         }
 
-
-
         // Set response headers and send file
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=Patrak_Report_${month}_${half}.xlsx`);
+        res.setHeader('Content-Disposition', `attachment; filename=Alpahar_Patrak_Report_${month}_${half}.xlsx`);
         await workbook.xlsx.write(res);
         res.end();
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Report generation failed.' });
+        res.status(500).json({ message: 'Alpahar Report generation failed.' });
     }
 };

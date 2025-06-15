@@ -3,6 +3,8 @@ import {
     exportUsers, 
     exportAttendance, 
     exportStudents, 
+    exportTeachers,
+    exportClassAssignments,
     fullBackup, 
     backupHealth, 
     getBackupStats 
@@ -34,6 +36,8 @@ const adminOnly = requireAdmin;
 router.get('/export/users', adminOnly, exportUsers);
 router.get('/export/attendance', adminOnly, exportAttendance);
 router.get('/export/students', adminOnly, exportStudents);
+router.get('/export/teachers', adminOnly, exportTeachers);
+router.get('/export/class-assignments', adminOnly, exportClassAssignments);
 
 // Full backup endpoint
 router.post('/full', adminOnly, fullBackup);

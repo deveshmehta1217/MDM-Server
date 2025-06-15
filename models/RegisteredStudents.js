@@ -82,6 +82,18 @@ const RegisteredStudentSchema = new mongoose.Schema({
             },
         },
     },
+    // Class lock status fields
+    isLocked: {
+        type: Boolean,
+        default: false
+    },
+    lastLockedStatusUpdatedAt: {
+        type: Date
+    },
+    lockedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
 }, {
     timestamps: true,
 });

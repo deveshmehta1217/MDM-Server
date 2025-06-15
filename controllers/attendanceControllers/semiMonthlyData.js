@@ -13,7 +13,8 @@ export const getSemiMonthlyReport = async (req, res) => {
             date: {
                 $gte: startDate,
                 $lt: endDate
-            }
+            },
+            schoolId: req.schoolId
         }).sort({ date: 1 });
 
         const result = {};
@@ -28,6 +29,15 @@ export const getSemiMonthlyReport = async (req, res) => {
                 grandTotal: 0
             },
             mealTakenStudents: {
+                sc: { male: 0, female: 0 },
+                st: { male: 0, female: 0 },
+                obc: { male: 0, female: 0 },
+                general: { male: 0, female: 0 },
+                totalMale: 0,
+                totalFemale: 0,
+                grandTotal: 0
+            },
+            alpaharTakenStudents: {
                 sc: { male: 0, female: 0 },
                 st: { male: 0, female: 0 },
                 obc: { male: 0, female: 0 },
@@ -60,6 +70,15 @@ export const getSemiMonthlyReport = async (req, res) => {
                         totalMale: 0,
                         totalFemale: 0,
                         grandTotal: 0
+                    },
+                    alpaharTakenStudents: {
+                        sc: { male: 0, female: 0 },
+                        st: { male: 0, female: 0 },
+                        obc: { male: 0, female: 0 },
+                        general: { male: 0, female: 0 },
+                        totalMale: 0,
+                        totalFemale: 0,
+                        grandTotal: 0
                     }
                 };
             }
@@ -79,6 +98,16 @@ export const getSemiMonthlyReport = async (req, res) => {
 
                 overallTotals.mealTakenStudents[category].male += record.mealTakenStudents[category].male;
                 overallTotals.mealTakenStudents[category].female += record.mealTakenStudents[category].female;
+
+                // Update alpaharTakenStudents totals
+                const alpaharMale = record.alpaharTakenStudents?.[category]?.male || 0;
+                const alpaharFemale = record.alpaharTakenStudents?.[category]?.female || 0;
+                
+                result[dateKey].alpaharTakenStudents[category].male += alpaharMale;
+                result[dateKey].alpaharTakenStudents[category].female += alpaharFemale;
+
+                overallTotals.alpaharTakenStudents[category].male += alpaharMale;
+                overallTotals.alpaharTakenStudents[category].female += alpaharFemale;
             });
 
             // Calculate daily totals for presentStudents
@@ -97,15 +126,28 @@ export const getSemiMonthlyReport = async (req, res) => {
             mealTotals.totalFemale += record.mealTakenStudents.sc.female + record.mealTakenStudents.st.female +
             record.mealTakenStudents.obc.female + record.mealTakenStudents.general.female;
             // mealTotals.grandTotal = mealTotals.totalMale + mealTotals.totalFemale;
+
+            // Calculate daily totals for alpaharTakenStudents
+            const alpaharTotals = result[dateKey].alpaharTakenStudents;
+            const alpaharMaleTotal = (record.alpaharTakenStudents?.sc?.male || 0) + (record.alpaharTakenStudents?.st?.male || 0) +
+                (record.alpaharTakenStudents?.obc?.male || 0) + (record.alpaharTakenStudents?.general?.male || 0);
+            const alpaharFemaleTotal = (record.alpaharTakenStudents?.sc?.female || 0) + (record.alpaharTakenStudents?.st?.female || 0) +
+                (record.alpaharTakenStudents?.obc?.female || 0) + (record.alpaharTakenStudents?.general?.female || 0);
+            
+            alpaharTotals.totalMale += alpaharMaleTotal;
+            alpaharTotals.totalFemale += alpaharFemaleTotal;
+            // alpaharTotals.grandTotal = alpaharTotals.totalMale + alpaharTotals.totalFemale;
             
         });
         
         Object.keys(result).forEach(dateKey => {
             const presentTotals = result[dateKey].presentStudents;
             const mealTotals = result[dateKey].mealTakenStudents;
+            const alpaharTotals = result[dateKey].alpaharTakenStudents;
             
             presentTotals.grandTotal = presentTotals.totalMale + presentTotals.totalFemale;
             mealTotals.grandTotal = mealTotals.totalMale + mealTotals.totalFemale;
+            alpaharTotals.grandTotal = alpaharTotals.totalMale + alpaharTotals.totalFemale;
             
             overallTotals.presentStudents.totalMale += presentTotals.totalMale;
             overallTotals.presentStudents.totalFemale += presentTotals.totalFemale;
@@ -113,6 +155,9 @@ export const getSemiMonthlyReport = async (req, res) => {
             overallTotals.mealTakenStudents.totalMale += mealTotals.totalMale;
             overallTotals.mealTakenStudents.totalFemale += mealTotals.totalFemale;
             overallTotals.mealTakenStudents.grandTotal += mealTotals.grandTotal;
+            overallTotals.alpaharTakenStudents.totalMale += alpaharTotals.totalMale;
+            overallTotals.alpaharTakenStudents.totalFemale += alpaharTotals.totalFemale;
+            overallTotals.alpaharTakenStudents.grandTotal += alpaharTotals.grandTotal;
         });
 
         res.status(200).json({ result, overallTotals });

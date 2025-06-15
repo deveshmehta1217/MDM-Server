@@ -48,7 +48,6 @@ const UserSchema = new mongoose.Schema({
       },
       message: 'School ID must be exactly 11 digits'
     },
-    index: true
   },
   kendraNo: {
     type: String,
@@ -118,6 +117,14 @@ const UserSchema = new mongoose.Schema({
   isAdmin: {
     type: Boolean,
     default: false
+  },
+  schoolCode: {
+    type: String,
+    sparse: true // Allow null values but ensure uniqueness when present
+  },
+  teacherCount: {
+    type: Number,
+    default: 0
   },
   createdAt: {
     type: Date,

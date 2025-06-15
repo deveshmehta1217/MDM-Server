@@ -1,6 +1,9 @@
 import User from '../models/User.js';
 import Attendance from '../models/Attendace.js';
 import RegisteredStudent from '../models/RegisteredStudents.js';
+import Teacher from '../models/Teacher.js';
+import TeacherClassAssignment from '../models/TeacherClassAssignment.js';
+import SchoolCode from '../models/SchoolCode.js';
 import { uploadToGoogleDrive } from '../utils/googleDrive.js';
 import { compressData } from '../utils/compression.js';
 
@@ -153,11 +156,14 @@ export const fullBackup = async (req, res) => {
             version: '1.0.0'
         };
 
-        // Export all collections
-        const [users, attendance, students] = await Promise.all([
+        // Export all collections including new RBAC models
+        const [users, attendance, students, teachers, classAssignments, schoolCodes] = await Promise.all([
             User.find({}, { password: 0, resetPasswordToken: 0, resetPasswordExpires: 0 }).lean(),
             Attendance.find({}).lean(),
-            RegisteredStudent.find({}).lean()
+            RegisteredStudent.find({}).lean(),
+            Teacher.find({}, { password: 0, resetPasswordToken: 0, resetPasswordExpires: 0 }).lean(),
+            TeacherClassAssignment.find({}).lean(),
+            SchoolCode.find({}).lean()
         ]);
 
         backupData.collections = {
@@ -172,6 +178,18 @@ export const fullBackup = async (req, res) => {
             registeredStudents: {
                 count: students.length,
                 data: students
+            },
+            teachers: {
+                count: teachers.length,
+                data: teachers
+            },
+            teacherClassAssignments: {
+                count: classAssignments.length,
+                data: classAssignments
+            },
+            schoolCodes: {
+                count: schoolCodes.length,
+                data: schoolCodes
             }
         };
 
@@ -179,6 +197,9 @@ export const fullBackup = async (req, res) => {
             totalUsers: users.length,
             totalAttendanceRecords: attendance.length,
             totalStudentRecords: students.length,
+            totalTeachers: teachers.length,
+            totalClassAssignments: classAssignments.length,
+            totalSchoolCodes: schoolCodes.length,
             totalSize: JSON.stringify(backupData).length
         };
 
@@ -218,13 +239,130 @@ export const fullBackup = async (req, res) => {
     }
 };
 
+// Export teachers data (Principal only)
+export const exportTeachers = async (req, res) => {
+    try {
+        const { schoolId } = req.query;
+        const userRole = req.user?.role;
+        
+        let query = {};
+        
+        // Role-based filtering
+        if (userRole === 'PRINCIPAL') {
+            // Principal can export their school's teachers
+            query.schoolId = req.schoolId;
+        } else {
+            // Teachers cannot export teacher data
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Only principals can export teacher data.'
+            });
+        }
+        
+        // Additional school filter for super admin
+        if (schoolId && req.user?.isAdmin) {
+            query.schoolId = schoolId;
+        }
+
+        const teachers = await Teacher.find(query, {
+            password: 0,
+            resetPasswordToken: 0,
+            resetPasswordExpires: 0
+        }).lean();
+
+        const exportData = {
+            exportType: 'teachers',
+            exportDate: new Date().toISOString(),
+            filters: { schoolId: query.schoolId },
+            totalRecords: teachers.length,
+            data: teachers
+        };
+
+        // Compress data if requested
+        const compressed = req.query.compress === 'true';
+        const finalData = compressed ? await compressData(exportData) : exportData;
+
+        res.json({
+            success: true,
+            message: `Exported ${teachers.length} teacher records`,
+            compressed,
+            data: finalData
+        });
+
+    } catch (error) {
+        console.error('Export teachers error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to export teachers',
+            error: error.message
+        });
+    }
+};
+
+// Export class assignments (Principal only)
+export const exportClassAssignments = async (req, res) => {
+    try {
+        const { schoolId } = req.query;
+        const userRole = req.user?.role;
+        
+        let query = {};
+        
+        // Role-based filtering
+        if (userRole === 'PRINCIPAL') {
+            query.schoolId = req.schoolId;
+        } else {
+            return res.status(403).json({
+                success: false,
+                message: 'Access denied. Only principals can export class assignment data.'
+            });
+        }
+        
+        if (schoolId && req.user?.isAdmin) {
+            query.schoolId = schoolId;
+        }
+
+        const assignments = await TeacherClassAssignment.find(query)
+            .populate('teacherId', 'name email mobileNo')
+            .lean();
+
+        const exportData = {
+            exportType: 'classAssignments',
+            exportDate: new Date().toISOString(),
+            filters: { schoolId: query.schoolId },
+            totalRecords: assignments.length,
+            data: assignments
+        };
+
+        const compressed = req.query.compress === 'true';
+        const finalData = compressed ? await compressData(exportData) : exportData;
+
+        res.json({
+            success: true,
+            message: `Exported ${assignments.length} class assignment records`,
+            compressed,
+            data: finalData
+        });
+
+    } catch (error) {
+        console.error('Export class assignments error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to export class assignments',
+            error: error.message
+        });
+    }
+};
+
 // Backup health check
 export const backupHealth = async (req, res) => {
     try {
-        const [userCount, attendanceCount, studentCount] = await Promise.all([
+        const [userCount, attendanceCount, studentCount, teacherCount, assignmentCount, codeCount] = await Promise.all([
             User.countDocuments(),
             Attendance.countDocuments(),
-            RegisteredStudent.countDocuments()
+            RegisteredStudent.countDocuments(),
+            Teacher.countDocuments(),
+            TeacherClassAssignment.countDocuments(),
+            SchoolCode.countDocuments()
         ]);
 
         const healthData = {
@@ -235,7 +373,10 @@ export const backupHealth = async (req, res) => {
                 collections: {
                     users: userCount,
                     attendance: attendanceCount,
-                    registeredStudents: studentCount
+                    registeredStudents: studentCount,
+                    teachers: teacherCount,
+                    teacherClassAssignments: assignmentCount,
+                    schoolCodes: codeCount
                 }
             },
             environment: {
@@ -247,6 +388,11 @@ export const backupHealth = async (req, res) => {
                 googleDriveEnabled: process.env.GOOGLE_DRIVE_ENABLED === 'true',
                 compressionEnabled: true,
                 maxRecordsPerPage: 1000
+            },
+            rbac: {
+                enabled: true,
+                version: '2.0.0',
+                features: ['teacher-management', 'class-assignments', 'dual-attendance', 'class-locks']
             }
         };
 
