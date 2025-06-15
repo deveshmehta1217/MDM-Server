@@ -59,6 +59,9 @@ export const authenticateSchool = [authenticateWithSchool, authorizeSchool];
 // Combined middleware for admin operations
 export const authenticateAdmin = [authenticateWithSchool, authorizeSchool, requireAdmin];
 
+// Combined middleware for admin operations
+export const authenticatePrincipal = [authenticateWithSchool, authorizeSchool, authenticateRole(['PRINCIPAL'])];
+
 // Role-based authentication middleware
 export const authenticateRole = (allowedRoles) => {
   return (req, res, next) => {

@@ -10,7 +10,7 @@ import {
   getClassTeachers
 } from '../controllers/classController.js';
 import {
-  authenticateAdmin,
+  authenticatePrincipal,
   authenticateSchool,
   authenticateRole
 } from '../middleware/auth.js';
@@ -18,11 +18,11 @@ import {
 const router = express.Router();
 
 // Principal only routes
-router.post('/assign-bulk', authenticateAdmin, bulkAssignClasses);
-router.delete('/assign-bulk', authenticateAdmin, bulkRemoveClassAssignments);
-router.post('/lock-bulk', authenticateAdmin, bulkLockUnlockClasses);
-router.get('/overview', authenticateAdmin, getClassAssignmentsOverview);
-router.delete('/assignment/:assignmentId', authenticateAdmin, removeClassAssignment);
+router.post('/assign-bulk', authenticatePrincipal, bulkAssignClasses);
+router.delete('/assign-bulk', authenticatePrincipal, bulkRemoveClassAssignments);
+router.post('/lock-bulk', authenticatePrincipal, bulkLockUnlockClasses);
+router.get('/overview', authenticatePrincipal, getClassAssignmentsOverview);
+router.delete('/assignment/:assignmentId', authenticatePrincipal, removeClassAssignment);
 
 // Routes accessible by both principal and teachers
 router.get('/teacher/:teacherId/assignments', authenticateSchool, getTeacherClassAssignments);
