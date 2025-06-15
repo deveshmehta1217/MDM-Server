@@ -7,7 +7,6 @@ import Teacher from '../models/Teacher.js';
 export const takeAttendance = async (req, res) => {
   try {
     const { standard, division, date, registeredStudents, presentStudents, mealTakenStudents, alpaharTakenStudents } = req.body;
-    console.log(req.body)
     // Determine who is taking attendance
     const userRole = req.user?.role;
     const takenBy = req.user.id;

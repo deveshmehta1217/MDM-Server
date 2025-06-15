@@ -9,10 +9,10 @@ import {
 } from '../controllers/registeredStudentsController.js';
 import { 
     authenticateSchool, 
-    authenticateAdmin, 
     authenticateRole,
     requireClassAccess,
-    requireUnlockedClass 
+    requireUnlockedClass,
+    authenticatePrincipal
 } from '../middleware/auth.js';
 import { requireVerification } from '../middleware/verification.js';
 
@@ -41,7 +41,7 @@ router.get('/:academicYear/:standard/:division',
 // @desc    Create a new registered student (Principal only)
 // @access  Private (Principal only)
 router.post('/', 
-    authenticateAdmin, 
+    authenticatePrincipal, 
     requireVerification, 
     createRegisteredStudent
 );
@@ -50,7 +50,7 @@ router.post('/',
 // @desc    Update a registered student (Principal only)
 // @access  Private (Principal only)
 router.put('/:id', 
-    authenticateAdmin, 
+    authenticatePrincipal, 
     requireVerification, 
     updateRegisteredStudent
 );

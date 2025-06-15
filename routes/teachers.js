@@ -12,7 +12,7 @@ import {
   teacherChangePassword
 } from '../controllers/teacherController.js';
 import {
-  authenticateAdmin,
+  authenticatePrincipal,
   authenticateApprovedTeacher,
   authenticateRole
 } from '../middleware/auth.js';
@@ -26,10 +26,10 @@ router.post('/forgot-password', teacherForgotPassword);
 router.post('/reset-password', teacherResetPassword);
 
 // Principal only routes
-router.get('/pending', authenticateAdmin, getPendingTeachers);
-router.get('/', authenticateAdmin, getAllTeachers);
-router.post('/:teacherId/approve', authenticateAdmin, approveTeacher);
-router.patch('/:teacherId/toggle-status', authenticateAdmin, toggleTeacherStatus);
+router.get('/pending', authenticatePrincipal, getPendingTeachers);
+router.get('/', authenticatePrincipal, getAllTeachers);
+router.post('/:teacherId/approve', authenticatePrincipal, approveTeacher);
+router.patch('/:teacherId/toggle-status', authenticatePrincipal, toggleTeacherStatus);
 
 // Teacher only routes
 router.get('/profile', authenticateApprovedTeacher, getTeacherProfile);

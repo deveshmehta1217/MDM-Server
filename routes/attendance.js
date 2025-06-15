@@ -17,15 +17,10 @@ import {
     getDailyAttendanceStatus,
 } from '../controllers/attendanceController.js';
 import {
-    takeAttendance,
-    getEnhancedDailyAttendanceStatus,
-    getAttendanceByTypeAndClass,
     getEnhancedAttendance,
-    saveEnhancedAttendance
 } from '../controllers/attendanceRBACController.js';
 import {
     authenticateSchool,
-    authenticateAdmin,
     requireClassAccess,
     requireUnlockedClass,
     authenticateRole
@@ -50,40 +45,6 @@ router.get('/report/excel/semi-monthly/mdm/:year/:month/:half', authenticateScho
 router.get('/report/excel/semi-monthly/alpahar/:year/:month/:half', authenticateSchool, requireVerification, downloadSemiMonthlyAlpaharReportExcel);
 router.get('/report/data/semi-monthly/:year/:month/:half', authenticateSchool, requireVerification, getSemiMonthlyReportData);
 
-// Enhanced RBAC routes for dual attendance system
-
-// @route   POST /api/attendance/take
-// @desc    Take attendance (ALPAHAR or MDM) with RBAC
-// @access  Private (Principal or assigned Teacher)
-router.post('/take', 
-    authenticateSchool, 
-    requireVerification,
-    authenticateRole(['PRINCIPAL', 'TEACHER']),
-    requireClassAccess,
-    requireUnlockedClass,
-    takeAttendance
-);
-
-// @route   GET /api/attendance/daily-status/:date
-// @desc    Get enhanced daily attendance status with role-based filtering
-// @access  Private (Principal or Teacher - filtered by assigned classes)
-router.get('/daily-status/:date',
-    authenticateSchool,
-    requireVerification,
-    authenticateRole(['PRINCIPAL', 'TEACHER']),
-    getEnhancedDailyAttendanceStatus
-);
-
-// @route   GET /api/attendance/:date/:attendanceType/:standard/:division
-// @desc    Get attendance by type and class (ALPAHAR or MDM)
-// @access  Private (Principal or assigned Teacher)
-router.get('/:date/:attendanceType/:standard/:division',
-    authenticateSchool,
-    requireVerification,
-    authenticateRole(['PRINCIPAL', 'TEACHER']),
-    requireClassAccess,
-    getAttendanceByTypeAndClass
-);
 
 // @route   GET /api/attendance/:date
 // @desc    Get all attendance for a specific date with role-based filtering
@@ -93,18 +54,6 @@ router.get('/:date',
     requireVerification,
     authenticateRole(['PRINCIPAL', 'TEACHER']),
     getEnhancedAttendance
-);
-
-// @route   POST /api/attendance/save-enhanced
-// @desc    Enhanced save attendance with RBAC support
-// @access  Private (Principal or assigned Teacher)
-router.post('/save-enhanced',
-    authenticateSchool,
-    requireVerification,
-    authenticateRole(['PRINCIPAL', 'TEACHER']),
-    requireClassAccess,
-    requireUnlockedClass,
-    saveEnhancedAttendance
 );
 
 // Legacy routes (backward compatibility)
@@ -136,6 +85,12 @@ router.put('/:id', authenticateSchool, requireVerification, updateAttendance);
 // @route   POST /api/attendance/save
 // @desc    Create or update attendance record
 // @access  Private (Requires Verification)
-router.post('/save', authenticateSchool, requireVerification, saveAttendance);
+router.post('/save', authenticateSchool,
+    requireVerification,
+    authenticateRole(['PRINCIPAL', 'TEACHER']),
+    requireClassAccess,
+    requireUnlockedClass,
+    saveAttendance
+);
 
 export default router;

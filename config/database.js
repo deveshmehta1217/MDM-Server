@@ -29,7 +29,6 @@ const mongoOptions = {
 // Connect to MongoDB with proper error handling for serverless
 export const connectToDatabase = async () => {
   if (isConnected && mongoose.connection.readyState === 1) {
-    console.log('Using existing MongoDB connection');
     return mongoose.connection;
   }
 
