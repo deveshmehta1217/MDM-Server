@@ -246,54 +246,6 @@ export const getAttendanceByClass = async (req, res) => {
   }
 };
 
-// Get all attendance for a date with role-based filtering
-export const getEnhancedAttendance = async (req, res) => {
-  try {
-    const { date } = req.params;
-    const userRole = req.user?.role;
-    const formattedDate = new Date(date).toISOString().split('T')[0];
-    
-    let query = {
-      date: formattedDate,
-      schoolId: req.schoolId
-    };
-    
-    // If teacher, filter by assigned classes
-    if (userRole === 'TEACHER') {
-      const assignments = await TeacherClassAssignment.find({
-        teacherId: req.user.id,
-        schoolId: req.schoolId
-      });
-      
-      const classFilters = assignments.map(a => ({
-        standard: a.standard,
-        division: a.division
-      }));
-      
-      if (classFilters.length > 0) {
-        query.$or = classFilters;
-      } else {
-        // Teacher has no assigned classes
-        return res.json({
-          success: true,
-          attendance: []
-        });
-      }
-    }
-    
-    const attendance = await Attendance.find(query)
-      .sort({ standard: 1, division: 1 })
-      .populate('takenBy', 'name email');
-    
-    res.json({
-      success: true,
-      attendance
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
 // Enhanced save attendance with RBAC
 export const saveEnhancedAttendance = async (req, res) => {
   try {
