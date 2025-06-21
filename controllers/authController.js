@@ -119,48 +119,6 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
-  try {
-    const { schoolId, password } = req.body;
-    
-    // Find user by schoolId
-    const user = await User.findOne({ schoolId });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-    
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-    
-    // Generate auth token
-    const token = user.generateAuthToken();
-    
-    res.json({
-      token,
-      user: {
-        _id: user._id,
-        schoolSubName: user.schoolSubName,
-        mobileNo: user.mobileNo,
-        email: user.email,
-        schoolName: user.schoolName,
-        schoolId: user.schoolId,
-        kendraNo: user.kendraNo,
-        contactPersonName: user.contactPersonName,
-        contactPersonMobile: user.contactPersonMobile,
-        contactPersonEmail: user.contactPersonEmail,
-        isAdmin: user.isAdmin,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
 export const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password -resetPasswordToken -resetPasswordExpires');
