@@ -8,7 +8,8 @@ import {
     downloadSemiMonthlyAlpaharReportExcel,
     getSemiMonthlyReportData,
     getDailyReportData,
-    getDailyReportDataV2
+    getDailyReportDataV2,
+    getSemiMonthlyReportV2
 } from '../controllers/attendanceController.js';
 import {
     authenticateSchool,
@@ -28,5 +29,6 @@ router.get('/semi-monthly/:year/:month/:half', authenticateSchool, requireVerifi
 router.get('/excel/semi-monthly/mdm/:year/:month/:half', authenticateSchool, requireVerification, downloadSemiMonthlyReportExcel);
 router.get('/excel/semi-monthly/alpahar/:year/:month/:half', authenticateSchool, requireVerification, downloadSemiMonthlyAlpaharReportExcel);
 router.get('/data/semi-monthly/:year/:month/:half', authenticateSchool, requireVerification, getSemiMonthlyReportData);
+router.get('/v2/semi-monthly/:year/:month/:half', authenticateSchool, requireVerification, getSemiMonthlyReportV2);
 
 export default router;
