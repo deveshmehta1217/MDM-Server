@@ -99,32 +99,6 @@ export const deactivateSchoolCode = async (req, res) => {
   }
 };
 
-// Get all school codes history (Principal only)
-export const getSchoolCodeHistory = async (req, res) => {
-  try {
-    const schoolCodes = await SchoolCode.find({
-      schoolId: req.schoolId
-    }).sort({ createdAt: -1 });
-    
-    const codesWithStatus = schoolCodes.map(code => ({
-      _id: code._id,
-      code: code.code,
-      isActive: code.isActive,
-      isExpired: code.isExpired(),
-      isValid: code.isValid(),
-      createdAt: code.createdAt,
-      expiresAt: code.expiresAt
-    }));
-    
-    res.json({
-      success: true,
-      schoolCodes: codesWithStatus
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
 // Validate school code (Public endpoint for teacher registration)
 export const validateSchoolCode = async (req, res) => {
   try {
@@ -153,38 +127,6 @@ export const validateSchoolCode = async (req, res) => {
         schoolSubName: schoolCode.createdBy.schoolSubName
       } : null,
       message: isValid ? 'Valid school code' : 'School code is inactive or expired'
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-// Extend school code expiry (Principal only)
-export const extendSchoolCodeExpiry = async (req, res) => {
-  try {
-    const { code } = req.params;
-    const { months = 12 } = req.body; // Default extend by 12 months
-    
-    const schoolCode = await SchoolCode.findOne({
-      code: code.toUpperCase(),
-      schoolId: req.schoolId
-    });
-    
-    if (!schoolCode) {
-      return res.status(404).json({ message: 'School code not found' });
-    }
-    
-    // Extend expiry date
-    const newExpiryDate = new Date(schoolCode.expiresAt);
-    newExpiryDate.setMonth(newExpiryDate.getMonth() + parseInt(months));
-    
-    schoolCode.expiresAt = newExpiryDate;
-    await schoolCode.save();
-    
-    res.json({
-      success: true,
-      message: `School code expiry extended by ${months} months`,
-      newExpiryDate: newExpiryDate
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
