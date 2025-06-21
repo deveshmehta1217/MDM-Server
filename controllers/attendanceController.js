@@ -11,6 +11,7 @@ import { getDailyReportData } from './attendanceControllers/dailyDataOnly.js';
 import { getDailyReport } from './attendanceControllers/dailyReportData.js';
 import { getDailyAttendanceStatus } from './attendanceControllers/dailyStatus.js';
 import { getAttendanceStatus } from './attendanceControllers/semiMonthlyStatus.js';
+import { getDailyReportDataV2 } from './attendanceControllers/dailyReportCombined.js';
 
 export { 
     getDailyReport,
@@ -22,7 +23,8 @@ export {
     getSemiMonthlyReportData,
     getDailyReportData,
     getDailyAttendanceStatus,
-    getAttendanceStatus
+    getAttendanceStatus,
+    getDailyReportDataV2
 };
 
 export const getAttendanceByClass = async (req, res) => {
