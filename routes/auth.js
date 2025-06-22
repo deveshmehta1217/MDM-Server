@@ -2,7 +2,6 @@
 import express from 'express';
 import { 
   register, 
-  login, 
   getProfile, 
   updateProfile, 
   changePassword, 
@@ -26,11 +25,6 @@ const router = express.Router();
 // @desc    Register a new user
 // @access  Public
 router.post('/register', register);
-
-// @route   POST /api/auth/login
-// @desc    Login user and return JWT token
-// @access  Public
-router.post('/login', login);
 
 // @route   POST /api/auth/principal/login
 // @desc    Enhanced principal login with role information

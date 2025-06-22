@@ -1,42 +1,6 @@
 import RegisteredStudents from '../models/RegisteredStudents.js';
 import TeacherClassAssignment from '../models/TeacherClassAssignment.js';
 
-export const getRegisteredStudents = async (req, res) => {
-    try {
-        const { academicYear } = req.params;
-        const userRole = req.user?.role;
-        
-        let query = { 
-            academicYear,
-            schoolId: req.schoolId 
-        };
-        
-        // If teacher, filter by assigned classes only
-        if (userRole === 'TEACHER') {
-            const assignments = await TeacherClassAssignment.find({
-                teacherId: req.user.id,
-                schoolId: req.schoolId
-            });
-            
-            if (assignments.length === 0) {
-                return res.status(200).json([]);
-            }
-            
-            const classFilters = assignments.map(a => ({
-                standard: a.standard,
-                division: a.division
-            }));
-            
-            query.$or = classFilters;
-        }
-        
-        const data = await RegisteredStudents.find(query);
-        res.status(200).json(data);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
 export const getRegisteredStudentsByClass = async (req, res) => {
     try {
         const { standard, division, academicYear } = req.params;
@@ -46,51 +10,6 @@ export const getRegisteredStudentsByClass = async (req, res) => {
             academicYear,
             schoolId: req.schoolId
         });
-        res.status(200).json(data);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-export const createRegisteredStudent = async (req, res) => {
-    try {
-        const { standard, division, counts, academicYear } = req.body;
-        if (!academicYear) {
-            return res.status(400).json({ message: 'Academic year is required' });
-        }
-        const data = await RegisteredStudents.create({
-            schoolId: req.schoolId,
-            standard: parseInt(standard),
-            division,
-            counts,
-            academicYear
-        });
-        res.status(201).json(data);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-export const updateRegisteredStudent = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { standard, division, counts, academicYear } = req.body;
-        if (!academicYear) {
-            return res.status(400).json({ message: 'Academic year is required' });
-        }
-        
-        // First check if the record belongs to the user's school
-        const existingRecord = await RegisteredStudents.findOne({ _id: id, schoolId: req.schoolId });
-        if (!existingRecord) {
-            return res.status(404).json({ message: 'Registered student record not found or access denied' });
-        }
-        
-        const data = await RegisteredStudents.findByIdAndUpdate(id, {
-            standard: parseInt(standard),
-            division,
-            counts,
-            academicYear
-        }, { new: true });
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
