@@ -8,7 +8,6 @@ import {
 import {
     authenticateSchool,
     requireClassAccess,
-    requireUnlockedClass,
     authenticateRole
 } from '../middleware/auth.js';
 import { requireVerification } from '../middleware/verification.js';
@@ -32,7 +31,6 @@ router.post('/save', authenticateSchool,
     requireVerification,
     authenticateRole(['PRINCIPAL', 'TEACHER']),
     requireClassAccess,
-    requireUnlockedClass,
     saveAttendance
 );
 
