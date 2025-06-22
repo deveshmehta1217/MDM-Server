@@ -9,7 +9,8 @@ import {
     getSemiMonthlyReportData,
     getDailyReportData,
     getDailyReportDataV2,
-    getSemiMonthlyReportV2
+    getSemiMonthlyReportV2,
+    getDailyReportRangeV2
 } from '../controllers/attendanceController.js';
 import {
     authenticateSchool,
@@ -23,7 +24,7 @@ router.get('/excel/daily/mdm/:date', authenticateSchool, requireVerification, do
 router.get('/excel/daily/alpahar/:date', authenticateSchool, requireVerification, downloadDailyAlpaharReportExcel);
 router.get('/data/daily/:date', authenticateSchool, requireVerification, getDailyReportData);
 router.get('/v2/daily/:date', authenticateSchool, requireVerification, getDailyReportDataV2);
-
+router.get('/v2/daily-range/:startDate/:endDate', authenticateSchool, requireVerification, getDailyReportRangeV2);
 
 router.get('/semi-monthly/:year/:month/:half', authenticateSchool, requireVerification, getSemiMonthlyReport);
 router.get('/excel/semi-monthly/mdm/:year/:month/:half', authenticateSchool, requireVerification, downloadSemiMonthlyReportExcel);
