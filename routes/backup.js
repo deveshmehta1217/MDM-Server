@@ -17,33 +17,32 @@ import {
     testDriveConnection 
 } from '../utils/googleDrive.js';
 import { authenticateWithSchool, requireAdmin } from '../middleware/auth.js';
+import { authenticateBackupAPI, backupRateLimit } from '../middleware/backupAuth.js';
 
 const router = express.Router();
 
-// Apply authentication middleware to all backup routes
-router.use(authenticateWithSchool);
+// Apply backup API authentication and rate limiting to all backup routes
+router.use(authenticateBackupAPI);
+router.use(backupRateLimit);
 
-// Health check endpoint (no admin required)
+// Health check endpoint
 router.get('/health', backupHealth);
 
-// Backup statistics (no admin required)
+// Backup statistics
 router.get('/stats', getBackupStats);
 
-// Admin-only middleware (already imported)
-const adminOnly = requireAdmin;
-
-// Export endpoints
-router.get('/export/users', adminOnly, exportUsers);
-router.get('/export/attendance', adminOnly, exportAttendance);
-router.get('/export/students', adminOnly, exportStudents);
-router.get('/export/teachers', adminOnly, exportTeachers);
-router.get('/export/class-assignments', adminOnly, exportClassAssignments);
+// Export endpoints (API key authentication already applied)
+router.get('/export/users', exportUsers);
+router.get('/export/attendance', exportAttendance);
+router.get('/export/students', exportStudents);
+router.get('/export/teachers', exportTeachers);
+router.get('/export/class-assignments', exportClassAssignments);
 
 // Full backup endpoint
-router.post('/full', adminOnly, fullBackup);
+router.post('/full', fullBackup);
 
 // Google Drive management endpoints
-router.get('/drive/test', adminOnly, async (req, res) => {
+router.get('/drive/test', async (req, res) => {
     try {
         const result = await testDriveConnection();
         res.json(result);
@@ -56,7 +55,7 @@ router.get('/drive/test', adminOnly, async (req, res) => {
     }
 });
 
-router.get('/drive/quota', adminOnly, async (req, res) => {
+router.get('/drive/quota', async (req, res) => {
     try {
         const result = await checkDriveQuota();
         res.json(result);
@@ -69,7 +68,7 @@ router.get('/drive/quota', adminOnly, async (req, res) => {
     }
 });
 
-router.get('/drive/files', adminOnly, async (req, res) => {
+router.get('/drive/files', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 10;
         const result = await listBackupFiles(limit);
@@ -83,7 +82,7 @@ router.get('/drive/files', adminOnly, async (req, res) => {
     }
 });
 
-router.get('/drive/download/:fileId', adminOnly, async (req, res) => {
+router.get('/drive/download/:fileId', async (req, res) => {
     try {
         const { fileId } = req.params;
         const result = await downloadBackupFile(fileId);
@@ -100,7 +99,7 @@ router.get('/drive/download/:fileId', adminOnly, async (req, res) => {
     }
 });
 
-router.delete('/drive/cleanup', adminOnly, async (req, res) => {
+router.delete('/drive/cleanup', async (req, res) => {
     try {
         const retentionDays = parseInt(req.query.days) || 30;
         const result = await cleanupOldBackups(retentionDays);
@@ -115,7 +114,7 @@ router.delete('/drive/cleanup', adminOnly, async (req, res) => {
 });
 
 // Manual backup trigger endpoint
-router.post('/trigger', adminOnly, async (req, res) => {
+router.post('/trigger', async (req, res) => {
     try {
         const { type = 'full', compress = true } = req.body;
         
@@ -145,7 +144,7 @@ router.post('/trigger', adminOnly, async (req, res) => {
 });
 
 // Backup configuration endpoint
-router.get('/config', adminOnly, (req, res) => {
+router.get('/config', (req, res) => {
     const config = {
         googleDrive: {
             enabled: process.env.GOOGLE_DRIVE_ENABLED === 'true',
@@ -173,7 +172,7 @@ router.get('/config', adminOnly, (req, res) => {
 });
 
 // Backup schedule information
-router.get('/schedule', adminOnly, (req, res) => {
+router.get('/schedule', (req, res) => {
     const schedule = {
         automated: {
             enabled: process.env.BACKUP_SCHEDULE_ENABLED === 'true',

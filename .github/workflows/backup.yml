@@ -50,7 +50,7 @@ jobs:
           echo "➡️ Sending POST request to: $url"
           
           response=$(curl -s -X POST "$url" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -H "X-Backup-API-Key: ${{ secrets.BACKUP_API_KEY }}" \
             -H "Content-Type: application/json" \
             -w "\nHTTPSTATUS:%{http_code}" --dump-header headers.txt --trace-ascii trace.txt)
           
@@ -97,7 +97,7 @@ jobs:
           
           echo "Performing $backup_type backup (compress: $compress)..."
           response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/export/$backup_type?compress=$compress" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -H "X-Backup-API-Key: ${{ secrets.BACKUP_API_KEY }}" \
             -w "HTTPSTATUS:%{http_code}")
           
           http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
@@ -122,7 +122,7 @@ jobs:
         run: |
           echo "Checking backup system health..."
           response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/health" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -H "X-Backup-API-Key: ${{ secrets.BACKUP_API_KEY }}" \
             -w "HTTPSTATUS:%{http_code}")
           
           http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
@@ -144,7 +144,7 @@ jobs:
         run: |
           echo "Checking Google Drive quota..."
           response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/drive/quota" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -H "X-Backup-API-Key: ${{ secrets.BACKUP_API_KEY }}" \
             -w "HTTPSTATUS:%{http_code}")
           
           http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
@@ -164,7 +164,7 @@ jobs:
         run: |
           echo "Cleaning up old backups (30+ days)..."
           response=$(curl -s -X DELETE "${{ secrets.VERCEL_APP_URL }}/api/backup/drive/cleanup?days=30" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}" \
+            -H "X-Backup-API-Key: ${{ secrets.BACKUP_API_KEY }}" \
             -w "HTTPSTATUS:%{http_code}")
           
           http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
@@ -241,7 +241,7 @@ jobs:
         run: |
           echo "Verifying backup files..."
           response=$(curl -s -X GET "${{ secrets.VERCEL_APP_URL }}/api/backup/drive/files?limit=7" \
-            -H "Authorization: Bearer ${{ secrets.BACKUP_API_TOKEN }}")
+            -H "X-Backup-API-Key: ${{ secrets.BACKUP_API_KEY }}")
           
           file_count=$(echo "$response" | jq -r '.files | length')
           echo "Found $file_count backup files in the last week"
