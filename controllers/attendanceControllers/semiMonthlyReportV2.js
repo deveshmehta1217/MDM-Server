@@ -130,16 +130,30 @@ export const getSemiMonthlyReportV2 = async (req, res) => {
             mealGrid.push(sumGrid(mealGrid));
             alpaharGrid.push(sumGrid(alpaharGrid));
 
-            // Get last registered
-            const lastRegistered = await Attendance.findOne(matchQuery).sort({ date: -1 });
-            const regTotals = { sc: {}, st: {}, obc: {}, general: {} };
+            // Get registered totals from the last available date in the semi-month range
+            // First find the last available date for this range
+            const lastAvailableRecord = await Attendance.findOne(matchQuery).sort({ date: -1 });
+            const regTotals = { sc: { male: 0, female: 0 }, st: { male: 0, female: 0 }, obc: { male: 0, female: 0 }, general: { male: 0, female: 0 } };
 
-            if (lastRegistered) {
-                for (const c of ['sc', 'st', 'obc', 'general']) {
-                    regTotals[c] = {
-                        male: lastRegistered.registeredStudents[c].male,
-                        female: lastRegistered.registeredStudents[c].female
-                    };
+            if (lastAvailableRecord) {
+                const lastAvailableDate = lastAvailableRecord.date;
+                
+                // Get all std-div combinations for that last available date within the range
+                const registeredQuery = {
+                    schoolId: req.schoolId,
+                    date: lastAvailableDate,
+                    ...range.filter
+                };
+
+                const registeredRecords = await Attendance.find(registeredQuery);
+
+                // Sum up registered students from all std-div combinations in the range for the last available date
+                for (const record of registeredRecords) {
+                    const registeredStudents = record.registeredStudents;
+                    for (const category of ['sc', 'st', 'obc', 'general']) {
+                        regTotals[category].male += registeredStudents[category].male || 0;
+                        regTotals[category].female += registeredStudents[category].female || 0;
+                    }
                 }
             }
 

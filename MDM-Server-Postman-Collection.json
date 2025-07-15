@@ -1,0 +1,1522 @@
+{
+	"info": {
+		"_postman_id": "mdm-server-api-collection",
+		"name": "MDM Server API Collection",
+		"description": "Complete API collection for MDM (Mid Day Meal) Server with authentication, attendance management, reporting, and RBAC features",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "mdm-server"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "API Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/test",
+							"host": ["{{baseUrl}}"],
+							"path": ["test"]
+						}
+					}
+				},
+				{
+					"name": "Database Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health/db",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "health", "db"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schoolSubName\": \"school no 123\",\n  \"password\": \"password123\",\n  \"mobileNo\": \"9876543210\",\n  \"email\": \"john@example.com\",\n  \"schoolName\": \"ABC Primary School\",\n  \"schoolId\": \"12345678901\",\n  \"kendraNo\": \"KEN001\",\n  \"contactPersonName\": \"Jane Smith\",\n  \"contactPersonMobile\": \"9876543211\",\n  \"contactPersonEmail\": \"jane@example.com\",\n  \"paymentScreenshot\": \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD...\",\n  \"isAdmin\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Principal Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('authToken', response.token);",
+									"    pm.environment.set('userId', response.user._id);",
+									"    pm.environment.set('schoolId', response.user.schoolId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"password\": \"{{password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/principal/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "principal", "login"]
+						}
+					}
+				},
+				{
+					"name": "Teacher Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.environment.set('teacherToken', response.token);",
+									"    pm.environment.set('teacherId', response.user._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNo\": \"{{teacherMobile}}\",\n  \"password\": \"{{teacherPassword}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/teacher/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "teacher", "login"]
+						}
+					}
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"schoolSubName\": \"Updated School Name\",\n  \"mobileNo\": \"9876543212\",\n  \"email\": \"updated@example.com\",\n  \"schoolName\": \"Updated ABC School\",\n  \"kendraNo\": \"KEN002\",\n  \"contactPersonName\": \"Updated Contact\",\n  \"contactPersonMobile\": \"9876543213\",\n  \"contactPersonEmail\": \"updated.contact@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"oldpassword123\",\n  \"newPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "change-password"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"reset_token_from_email\",\n  \"newPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Get Verification Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/verification-status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "verification-status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin Only",
+			"item": [
+				{
+					"name": "Verify User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/verify/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "verify", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Unverify User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/unverify/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "unverify", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/users?page=1&limit=20&verified=true&search=john",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "verified",
+									"value": "true"
+								},
+								{
+									"key": "search",
+									"value": "john"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Payment Screenshot",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/payment-screenshot/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "payment-screenshot", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Payment Screenshot",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/payment-screenshot/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "payment-screenshot", "{{userId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Teacher Management",
+			"item": [
+				{
+					"name": "Teacher Registration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Teacher Name\",\n  \"email\": \"teacher@example.com\",\n  \"mobileNo\": \"9876543210\",\n  \"password\": \"password123\",\n  \"schoolCode\": \"SCH001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "register"]
+						}
+					}
+				},
+				{
+					"name": "Teacher Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"teacher@example.com\",\n  \"schoolId\": \"{{schoolId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/forgot-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Teacher Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"reset_token_from_email\",\n  \"newPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/reset-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Teacher Change Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacherToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"currentPassword\": \"oldpassword123\",\n  \"newPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "change-password"]
+						}
+					}
+				},
+				{
+					"name": "Get Teacher Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacherToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Get Pending Teachers (Principal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/pending",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "pending"]
+						}
+					}
+				},
+				{
+					"name": "Get All Teachers (Principal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", ""]
+						}
+					}
+				},
+				{
+					"name": "Approve/Reject Teacher (Principal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"approve\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/{{teacherId}}/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "{{teacherId}}", "approve"]
+						}
+					}
+				},
+				{
+					"name": "Toggle Teacher Status (Principal)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/teachers/{{teacherId}}/toggle-status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "teachers", "{{teacherId}}", "toggle-status"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "School Code Management",
+			"item": [
+				{
+					"name": "Generate School Code (Principal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"expiryHours\": 72\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/school-code/generate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "school-code", "generate"]
+						}
+					}
+				},
+				{
+					"name": "Get Active School Code (Principal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/school-code/",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "school-code", ""]
+						}
+					}
+				},
+				{
+					"name": "Validate School Code (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/school-code/validate/{{schoolCode}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "school-code", "validate", "{{schoolCode}}"]
+						}
+					}
+				},
+				{
+					"name": "Deactivate School Code (Principal)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/school-code/{{schoolCode}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "school-code", "{{schoolCode}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Class Management",
+			"item": [
+				{
+					"name": "Bulk Assign Classes (Principal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"assignments\": [\n    {\n      \"teacherId\": \"{{teacherId}}\",\n      \"classes\": [\n        { \"standard\": 1, \"division\": \"A\" },\n        { \"standard\": 1, \"division\": \"B\" }\n      ]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/assign-bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "assign-bulk"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Remove Class Assignments (Principal)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"assignments\": [\n    {\n      \"teacherId\": \"{{teacherId}}\",\n      \"classes\": [\n        { \"standard\": 1, \"division\": \"A\" }\n      ]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/assign-bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "assign-bulk"]
+						}
+					}
+				},
+				{
+					"name": "Bulk Lock/Unlock Classes (Principal)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"classes\": [\n    { \"standard\": 1, \"division\": \"A\" },\n    { \"standard\": 2, \"division\": \"B\" }\n  ],\n  \"action\": \"lock\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/lock-bulk",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "lock-bulk"]
+						}
+					}
+				},
+				{
+					"name": "Get Class Lock Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/lock-status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "lock-status"]
+						}
+					}
+				},
+				{
+					"name": "Get Class Assignments Overview (Principal)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/overview",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "overview"]
+						}
+					}
+				},
+				{
+					"name": "Get Teacher Class Assignments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/teacher/{{teacherId}}/assignments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "teacher", "{{teacherId}}", "assignments"]
+						}
+					}
+				},
+				{
+					"name": "Get Class Teachers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/{{standard}}/{{division}}/teachers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "{{standard}}", "{{division}}", "teachers"]
+						}
+					}
+				},
+				{
+					"name": "Remove Specific Class Assignment (Principal)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/classes/assignment/{{assignmentId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "classes", "assignment", "{{assignmentId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Registered Students",
+			"item": [
+				{
+					"name": "Get Registered Students by Class",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/registered/{{academicYear}}/{{standard}}/{{division}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "registered", "{{academicYear}}", "{{standard}}", "{{division}}"]
+						}
+					}
+				},
+				{
+					"name": "Save Registered Students",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"standard\": 1,\n  \"division\": \"A\",\n  \"academicYear\": \"2024-2025\",\n  \"counts\": {\n    \"general\": { \"male\": 20, \"female\": 18 },\n    \"obc\": { \"male\": 15, \"female\": 12 },\n    \"sc\": { \"male\": 10, \"female\": 8 },\n    \"st\": { \"male\": 5, \"female\": 7 }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/registered/save",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "registered", "save"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Attendance",
+			"item": [
+				{
+					"name": "Save Attendance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"standard\": 1,\n  \"division\": \"A\",\n  \"date\": \"2024-01-15\",\n  \"registeredStudents\": {\n    \"sc\": { \"male\": 10, \"female\": 8 },\n    \"st\": { \"male\": 5, \"female\": 7 },\n    \"obc\": { \"male\": 15, \"female\": 12 },\n    \"general\": { \"male\": 20, \"female\": 18 }\n  },\n  \"presentStudents\": {\n    \"sc\": { \"male\": 8, \"female\": 6 },\n    \"st\": { \"male\": 4, \"female\": 5 },\n    \"obc\": { \"male\": 12, \"female\": 10 },\n    \"general\": { \"male\": 18, \"female\": 16 }\n  },\n  \"mealTakenStudents\": {\n    \"sc\": { \"male\": 8, \"female\": 6 },\n    \"st\": { \"male\": 4, \"female\": 5 },\n    \"obc\": { \"male\": 12, \"female\": 10 },\n    \"general\": { \"male\": 18, \"female\": 16 }\n  },\n  \"alpaharTakenStudents\": {\n    \"sc\": { \"male\": 6, \"female\": 4 },\n    \"st\": { \"male\": 3, \"female\": 4 },\n    \"obc\": { \"male\": 10, \"female\": 8 },\n    \"general\": { \"male\": 15, \"female\": 14 }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/save",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "save"]
+						}
+					}
+				},
+				{
+					"name": "Get Attendance by Class (Legacy)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/{{date}}/{{standard}}/{{division}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "{{date}}", "{{standard}}", "{{division}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Daily Attendance Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/status/{{date}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "status", "{{date}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Semi-Monthly Attendance Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/status/{{year}}/{{month}}/{{half}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "status", "{{year}}", "{{month}}", "{{half}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get Daily Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/daily/{{date}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "daily", "{{date}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Daily Report Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/data/daily/{{date}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "data", "daily", "{{date}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Daily Report Data V2",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/v2/daily/{{date}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "v2", "daily", "{{date}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Daily Report Range V2",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/v2/daily-range/{{startDate}}/{{endDate}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "v2", "daily-range", "{{startDate}}", "{{endDate}}"]
+						}
+					}
+				},
+				{
+					"name": "Download Daily MDM Excel Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/excel/daily/mdm/{{date}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "excel", "daily", "mdm", "{{date}}"]
+						}
+					}
+				},
+				{
+					"name": "Download Daily Alpahar Excel Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/excel/daily/alpahar/{{date}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "excel", "daily", "alpahar", "{{date}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Semi-Monthly Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/semi-monthly/{{year}}/{{month}}/{{half}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "semi-monthly", "{{year}}", "{{month}}", "{{half}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Semi-Monthly Report Data",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/data/semi-monthly/{{year}}/{{month}}/{{half}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "data", "semi-monthly", "{{year}}", "{{month}}", "{{half}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Semi-Monthly Report V2",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/v2/semi-monthly/{{year}}/{{month}}/{{half}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "v2", "semi-monthly", "{{year}}", "{{month}}", "{{half}}"]
+						}
+					}
+				},
+				{
+					"name": "Download Semi-Monthly MDM Excel Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/excel/semi-monthly/mdm/{{year}}/{{month}}/{{half}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "excel", "semi-monthly", "mdm", "{{year}}", "{{month}}", "{{half}}"]
+						}
+					}
+				},
+				{
+					"name": "Download Semi-Monthly Alpahar Excel Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/attendance/report/excel/semi-monthly/alpahar/{{year}}/{{month}}/{{half}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attendance", "report", "excel", "semi-monthly", "alpahar", "{{year}}", "{{month}}", "{{half}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Backup System",
+			"item": [
+				{
+					"name": "Backup Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "health"]
+						}
+					}
+				},
+				{
+					"name": "Get Backup Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Export Users Data (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/export/users?compress=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "export", "users"],
+							"query": [
+								{
+									"key": "compress",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Attendance Data (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/export/attendance?startDate=2024-01-01&endDate=2024-12-31&compress=true&page=1&limit=1000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "export", "attendance"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "compress",
+									"value": "true"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "1000"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Students Data (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/export/students?academicYear=2024-2025&compress=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "export", "students"],
+							"query": [
+								{
+									"key": "academicYear",
+									"value": "2024-2025"
+								},
+								{
+									"key": "compress",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Teachers Data (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/export/teachers?compress=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "export", "teachers"],
+							"query": [
+								{
+									"key": "compress",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Class Assignments (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/export/class-assignments?compress=true",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "export", "class-assignments"],
+							"query": [
+								{
+									"key": "compress",
+									"value": "true"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Full Backup (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/full",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "full"]
+						}
+					}
+				},
+				{
+					"name": "Test Google Drive Connection (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/drive/test",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "drive", "test"]
+						}
+					}
+				},
+				{
+					"name": "Check Google Drive Quota (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/drive/quota",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "drive", "quota"]
+						}
+					}
+				},
+				{
+					"name": "List Backup Files (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/drive/files?limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "drive", "files"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Download Backup File (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/drive/download/{{fileId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "drive", "download", "{{fileId}}"]
+						}
+					}
+				},
+				{
+					"name": "Cleanup Old Backups (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/drive/cleanup?days=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "drive", "cleanup"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Backup Configuration (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/config",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "config"]
+						}
+					}
+				},
+				{
+					"name": "Manual Backup Trigger (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"full\",\n  \"compress\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/backup/trigger",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "backup", "trigger"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "schoolId",
+			"value": "12345678901",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "teacherMobile",
+			"value": "9876543210",
+			"type": "string"
+		},
+		{
+			"key": "teacherPassword",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "academicYear",
+			"value": "2024-2025",
+			"type": "string"
+		},
+		{
+			"key": "standard",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "division",
+			"value": "A",
+			"type": "string"
+		},
+		{
+			"key": "date",
+			"value": "2024-01-15",
+			"type": "string"
+		},
+		{
+			"key": "year",
+			"value": "2024",
+			"type": "string"
+		},
+		{
+			"key": "month",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "half",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "startDate",
+			"value": "2024-01-01",
+			"type": "string"
+		},
+		{
+			"key": "endDate",
+			"value": "2024-01-31",
+			"type": "string"
+		}
+	]
+}
