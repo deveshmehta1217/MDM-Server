@@ -136,46 +136,24 @@ export const cleanupOldBackups = async (retentionDays = 30) => {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
+        const query = `name contains 'mdm-backup' and mimeType='application/json' and createdTime < '${cutoffDate.toISOString()}'`;
+
         const response = await drive.files.list({
-            q: `name contains 'mdm-backup' and mimeType='application/json' and createdTime < '${cutoffDate.toISOString()}'`,
+            q: query,
             fields: 'files(id,name,createdTime)',
-            ...getDriveOptions()
+            // Remove driveId and corpora for personal Google Drive
         });
 
-        const filesToDelete = response.data.files || [];
-        const deletionResults = [];
-
-        // Delete old files
-        for (const file of filesToDelete) {
-            try {
-                await drive.files.delete({ fileId: file.id });
-                deletionResults.push({
-                    success: true,
-                    fileId: file.id,
-                    fileName: file.name,
-                    createdTime: file.createdTime
-                });
-                console.log(`Deleted old backup: ${file.name}`);
-            } catch (deleteError) {
-                deletionResults.push({
-                    success: false,
-                    fileId: file.id,
-                    fileName: file.name,
-                    error: deleteError.message
-                });
-            }
+        const files = response.data.files || [];
+        for (const file of files) {
+            await drive.files.delete({ fileId: file.id });
+            console.log(`Deleted backup file: ${file.name}`);
         }
 
-        return {
-            success: true,
-            deletedCount: deletionResults.filter(r => r.success).length,
-            failedCount: deletionResults.filter(r => !r.success).length,
-            results: deletionResults
-        };
-
+        console.log(`Cleanup complete. Deleted ${files.length} old backup files.`);
     } catch (error) {
-        console.error('Cleanup old backups error:', error);
-        throw new Error(`Failed to cleanup old backups: ${error.message}`);
+        console.error('Failed to clean up old backups:', error);
+        throw error;
     }
 };
 
