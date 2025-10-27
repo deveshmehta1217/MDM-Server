@@ -1,21 +1,33 @@
 import { google } from 'googleapis';
 import { Readable } from 'stream';
 
-// Initialize Google Drive API
-const initializeDrive = () => {
+// Initialize Google Drive API with OAuth2
+const initializeDrive = async () => {
     try {
-        const credentials = JSON.parse(process.env.GOOGLE_DRIVE_CREDENTIALS || '{}');
-        
-        const auth = new google.auth.GoogleAuth({
-            credentials,
-            scopes: ['https://www.googleapis.com/auth/drive.file']
-        });
+        const credentials = JSON.parse(process.env.GOOGLE_DRIVE_OAUTH_CREDENTIALS);
+        const { client_id, client_secret, redirect_uris } = credentials.web;
+
+        const auth = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
+
+        // Load tokens from file
+        const token = JSON.parse(process.env.GOOGLE_DRIVE_TOKEN);
+        auth.setCredentials(token);
 
         return google.drive({ version: 'v3', auth });
     } catch (error) {
         console.error('Failed to initialize Google Drive:', error);
         throw new Error('Google Drive initialization failed');
     }
+};
+
+const getDriveOptions = () => {
+    const options = {};
+    if (process.env.GOOGLE_DRIVE_SHARED_DRIVE_ID) {
+        options.driveId = process.env.GOOGLE_DRIVE_SHARED_DRIVE_ID;
+        options.supportsAllDrives = true;
+        options.includeItemsFromAllDrives = true;
+    }
+    return options;
 };
 
 // Upload data to Google Drive
@@ -25,17 +37,21 @@ export const uploadToGoogleDrive = async (data, fileName) => {
             throw new Error('Google Drive credentials not configured');
         }
 
-        const drive = initializeDrive();
+        const drive = await initializeDrive();
         const jsonData = JSON.stringify(data, null, 2);
-        
-        // Create a readable stream from the JSON data
+
         const bufferStream = new Readable();
         bufferStream.push(jsonData);
         bufferStream.push(null);
 
         const fileMetadata = {
             name: fileName,
-            parents: [process.env.GOOGLE_DRIVE_FOLDER_ID || 'root']
+            ...(
+                process.env.GOOGLE_DRIVE_FOLDER_ID
+                    ? { parents: [process.env.GOOGLE_DRIVE_FOLDER_ID] }
+                    : {}
+            ),
+            ...getDriveOptions()
         };
 
         const media = {
@@ -46,7 +62,8 @@ export const uploadToGoogleDrive = async (data, fileName) => {
         const response = await drive.files.create({
             resource: fileMetadata,
             media: media,
-            fields: 'id,name,size,createdTime'
+            fields: 'id,name,size,createdTime',
+            ...getDriveOptions()
         });
 
         console.log('File uploaded to Google Drive:', response.data);
@@ -69,13 +86,14 @@ export const uploadToGoogleDrive = async (data, fileName) => {
 // List backup files from Google Drive
 export const listBackupFiles = async (limit = 10) => {
     try {
-        const drive = initializeDrive();
-        
+        const drive = await initializeDrive();
+
         const response = await drive.files.list({
             q: "name contains 'mdm-backup' and mimeType='application/json'",
             orderBy: 'createdTime desc',
             pageSize: limit,
-            fields: 'files(id,name,size,createdTime,modifiedTime)'
+            fields: 'files(id,name,size,createdTime,modifiedTime)',
+            ...getDriveOptions()
         });
 
         return {
@@ -92,11 +110,12 @@ export const listBackupFiles = async (limit = 10) => {
 // Download backup file from Google Drive
 export const downloadBackupFile = async (fileId) => {
     try {
-        const drive = initializeDrive();
-        
+        const drive = await initializeDrive();
+
         const response = await drive.files.get({
             fileId: fileId,
-            alt: 'media'
+            alt: 'media',
+            ...getDriveOptions()
         });
 
         return {
@@ -113,14 +132,14 @@ export const downloadBackupFile = async (fileId) => {
 // Delete old backup files (retention policy)
 export const cleanupOldBackups = async (retentionDays = 30) => {
     try {
-        const drive = initializeDrive();
+        const drive = await initializeDrive();
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
 
-        // List all backup files
         const response = await drive.files.list({
             q: `name contains 'mdm-backup' and mimeType='application/json' and createdTime < '${cutoffDate.toISOString()}'`,
-            fields: 'files(id,name,createdTime)'
+            fields: 'files(id,name,createdTime)',
+            ...getDriveOptions()
         });
 
         const filesToDelete = response.data.files || [];
@@ -163,13 +182,14 @@ export const cleanupOldBackups = async (retentionDays = 30) => {
 // Check Google Drive quota
 export const checkDriveQuota = async () => {
     try {
-        const drive = initializeDrive();
+        const drive = await initializeDrive();
         
         const response = await drive.about.get({
             fields: 'storageQuota'
         });
 
         const quota = response.data.storageQuota;
+        console.log(response.data)
         const usedBytes = parseInt(quota.usage || 0);
         const limitBytes = parseInt(quota.limit || 0);
         const usedPercentage = limitBytes > 0 ? (usedBytes / limitBytes) * 100 : 0;
@@ -207,7 +227,7 @@ const formatBytes = (bytes) => {
 // Test Google Drive connection
 export const testDriveConnection = async () => {
     try {
-        const drive = initializeDrive();
+        const drive = await initializeDrive();
         
         // Try to get user info
         const response = await drive.about.get({
