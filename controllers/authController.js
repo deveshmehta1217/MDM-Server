@@ -81,7 +81,7 @@ export const register = async (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL_USER || 'your-email@gmail.com',
         to: user.email,
-        subject: 'Welcome to MDM Attendnace App- Registration Successful',
+        subject: 'Welcome to EduMeal Tracker App- Registration Successful',
         html: getRegistrationEmailTemplate(user)
       };
       
@@ -243,7 +243,7 @@ const getPasswordResetEmailTemplate = (user, resetUrl) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Reset Request - MDM Attendance App</title>
+        <title>Password Reset Request - EduMeal Tracker App</title>
         <style>
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -394,7 +394,7 @@ const getPasswordResetEmailTemplate = (user, resetUrl) => {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo">MDM Attendance System</div>
+                <div class="logo">EduMeal Tracker</div>
             </div>
             
             <div style="text-align: center;">
@@ -405,7 +405,7 @@ const getPasswordResetEmailTemplate = (user, resetUrl) => {
             
             <p>Hello <strong>${user.contactPersonName}</strong>,</p>
             
-            <p>You have requested to reset your password for your MDM Attendance App account. If you didn't make this request, please ignore this email and your password will remain unchanged.</p>
+            <p>You have requested to reset your password for your EduMeal Tracker App account. If you didn't make this request, please ignore this email and your password will remain unchanged.</p>
             
             <div class="info-box">
                 <h3 style="margin-top: 0; color: #ff6b35;">📋 Account Details</h3>
@@ -458,7 +458,7 @@ const getPasswordResetEmailTemplate = (user, resetUrl) => {
             </div>
             
             <div class="footer">
-                <p><strong>MDM Attendance App Security Team</strong></p>
+                <p><strong>EduMeal Tracker App Security Team</strong></p>
                 <p style="font-size: 12px; color: #999;">
                     This is an automated security email. Please do not reply to this message.<br>
                     If you didn't request this password reset, please contact support immediately.
@@ -477,7 +477,7 @@ const getRegistrationEmailTemplate = (user) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to MDM Attendnace App</title>
+        <title>Welcome to EduMeal Tracker App</title>
         <style>
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -582,10 +582,10 @@ const getRegistrationEmailTemplate = (user) => {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo">MDM Attendance System</div>
+                <div class="logo">EduMeal Tracker System</div>
             </div>
             
-            <h2 class="welcome-text">Welcome to MDM Attendnace App!</h2>
+            <h2 class="welcome-text">Welcome to EduMeal Tracker App!</h2>
             
             <p>Dear <strong>${user.contactPersonName}</strong>,</p>
             
@@ -641,7 +641,7 @@ const getRegistrationEmailTemplate = (user) => {
                 <h3 style="margin-top: 0; color: #1976d2;">🚀 What's Next?</h3>
                 <div class="step">Your registration details are being reviewed by our admin team</div>
                 <div class="step">You will receive a verification email once your account is approved</div>
-                <div class="step">After verification, you can access all MDM Attendnace App features</div>
+                <div class="step">After verification, you can access all EduMeal Tracker App features</div>
                 <div class="step">You can login anytime to check your verification status</div>
             </div>
             
@@ -657,11 +657,11 @@ const getRegistrationEmailTemplate = (user) => {
             
             <div class="contact-info">
                 <h4 style="margin-top: 0; color: #689f38;">📞 Need Help?</h4>
-                <p style="margin-bottom: 0;">If you have any questions or need assistance, please contact our support team. We're here to help you get started with the MDM Attendnace App.</p>
+                <p style="margin-bottom: 0;">If you have any questions or need assistance, please contact our support team. We're here to help you get started with the EduMeal Tracker App.</p>
             </div>
             
             <div class="footer">
-                <p><strong>MDM Attendnace App Developer Team</strong></p>
+                <p><strong>EduMeal Tracker App Developer Team</strong></p>
                 <p style="font-size: 12px; color: #999;">
                     This is an automated email. Please do not reply to this message.
                 </p>
@@ -686,7 +686,7 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Account ${isVerified ? 'Verified' : 'Verification Revoked'} - MDM Attendnace App</title>
+        <title>Account ${isVerified ? 'Verified' : 'Verification Revoked'} - EduMeal Tracker App</title>
         <style>
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -827,7 +827,7 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo">MDM Attendnace App</div>
+                <div class="logo">EduMeal Tracker App</div>
             </div>
             
             <div class="status-header">
@@ -839,8 +839,8 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
             <p>Dear <strong>${user.contactPersonName}</strong>,</p>
             
             <p>${isVerified 
-              ? 'We are pleased to inform you that your MDM Attendnace App account has been verified and approved by our admin team. You now have full access to all system features.'
-              : 'We regret to inform you that your MDM Attendnace App account verification has been revoked. Please contact our admin team for more information.'
+              ? 'We are pleased to inform you that your EduMeal Tracker App account has been verified and approved by our admin team. You now have full access to all system features.'
+              : 'We regret to inform you that your EduMeal Tracker App account verification has been revoked. Please contact our admin team for more information.'
             }</p>
             
             <div class="info-box">
@@ -884,12 +884,12 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
                 <div class="feature">Generate attendance reports and Excel files</div>
                 <div class="feature">View semi-monthly attendance data</div>
                 <div class="feature">Update student registration information</div>
-                <div class="feature">Access all MDM Attendnace App features</div>
+                <div class="feature">Access all EduMeal Tracker App features</div>
             </div>
             
             <div style="text-align: center;">
                 <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="login-button">
-                    🚀 Login to MDM Attendnace App
+                    🚀 Login to EduMeal Tracker App
                 </a>
             </div>
             ` : `
@@ -916,14 +916,14 @@ const getVerificationEmailTemplate = (user, isVerified = true) => {
                 <h4 style="margin-top: 0; color: #689f38;">📞 Need Support?</h4>
                 <p style="margin-bottom: 0;">
                     ${isVerified 
-                      ? 'If you have any questions about using the MDM Attendnace App, please don\'t hesitate to contact our support team.'
+                      ? 'If you have any questions about using the EduMeal Tracker App, please don\'t hesitate to contact our support team.'
                       : 'If you believe this is an error or need clarification, please contact our admin team immediately.'
                     }
                 </p>
             </div>
             
             <div class="footer">
-                <p><strong>MDM Attendnace App Developer Team</strong></p>
+                <p><strong>EduMeal Tracker App Developer Team</strong></p>
                 <p style="font-size: 12px; color: #999;">
                     This is an automated email. Please do not reply to this message.
                 </p>
@@ -964,7 +964,7 @@ export const forgotPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER || 'your-email@gmail.com',
       to: user.email,
-      subject: 'Password Reset Request - MDM Attendnace App',
+      subject: 'Password Reset Request - EduMeal Tracker App',
       html: getPasswordResetEmailTemplate(user, resetUrl)
     };
     
@@ -1040,7 +1040,7 @@ export const verifyUser = async (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL_USER || 'your-email@gmail.com',
         to: user.email,
-        subject: '🎉 Account Verified - MDM Attendnace App',
+        subject: '🎉 Account Verified - EduMeal Tracker App',
         html: getVerificationEmailTemplate(user, true)
       };
       
@@ -1094,7 +1094,7 @@ export const unverifyUser = async (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL_USER || 'your-email@gmail.com',
         to: user.email,
-        subject: '⚠️ Account Verification Revoked - MDM Attendnace App',
+        subject: '⚠️ Account Verification Revoked - EduMeal Tracker App',
         html: getVerificationEmailTemplate(user, false)
       };
       

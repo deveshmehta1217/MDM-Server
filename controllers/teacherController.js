@@ -354,7 +354,7 @@ const sendTeacherRegistrationNotification = async (principal, teacher) => {
   const mailOptions = {
     from: process.env.EMAIL_USER || 'your-email@yahoo.com',
     to: principal.email,
-    subject: 'New Teacher Registration - MDM Attendance App',
+    subject: 'New Teacher Registration - EduMeal Tracker App',
     html: `
       <h2>New Teacher Registration</h2>
       <p>A new teacher has registered for your school:</p>
@@ -364,7 +364,7 @@ const sendTeacherRegistrationNotification = async (principal, teacher) => {
         <li><strong>Mobile:</strong> ${teacher.mobileNo}</li>
         <li><strong>Registration Date:</strong> ${teacher.createdAt.toLocaleDateString()}</li>
       </ul>
-      <p>Please log in to your MDM Attendance App to approve or reject this registration.</p>
+      <p>Please log in to your EduMeal Tracker App to approve or reject this registration.</p>
     `
   };
   
@@ -374,11 +374,11 @@ const sendTeacherRegistrationNotification = async (principal, teacher) => {
 const sendTeacherApprovalEmail = async (teacher, isApproved) => {
   const transporter = createTransporter();
   const subject = isApproved 
-    ? 'Registration Approved - MDM Attendance App'
-    : 'Registration Rejected - MDM Attendance App';
+    ? 'Registration Approved - EduMeal Tracker App'
+    : 'Registration Rejected - EduMeal Tracker App';
     
   const message = isApproved
-    ? 'Your teacher registration has been approved! You can now log in to the MDM Attendance App.'
+    ? 'Your teacher registration has been approved! You can now log in to the EduMeal Tracker App.'
     : 'Your teacher registration has been rejected. Please contact your school principal for more information.';
   
   const mailOptions = {
@@ -434,7 +434,7 @@ export const teacherForgotPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER || 'your-email@yahoo.com',
       to: teacher.email,
-      subject: 'Password Reset Request - MDM Attendance App (Teacher)',
+      subject: 'Password Reset Request - EduMeal Tracker App (Teacher)',
       html: `
         <h2>Password Reset Request</h2>
         <p>Dear ${teacher.name},</p>
