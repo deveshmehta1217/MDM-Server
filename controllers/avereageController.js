@@ -62,7 +62,7 @@ export const getMonthlyPresentAverages = async (req, res) => {
 				stdMale += d.male;
 				stdFemale += d.female;
 				stdTotal += d.total;
-				stdDays += d.days;
+				stdDays = d.days;
 				// Registered students from the last date of the month for this std/div
 				const lastRec = stdDivLastAttendance[std][div];
 				if (lastRec) {
@@ -95,7 +95,7 @@ export const getMonthlyPresentAverages = async (req, res) => {
 			schoolMale += stdMale;
 			schoolFemale += stdFemale;
 			schoolTotal += stdTotal;
-			schoolDays += stdDays;
+			schoolDays = stdDays;
 			schoolRegMale += regMale;
 			schoolRegFemale += regFemale;
 			schoolRegTotal += regTotal;
