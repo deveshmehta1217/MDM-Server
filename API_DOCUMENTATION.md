@@ -1,3 +1,73 @@
+### 13c. Get Monthly Present Students Average and Percentage
+**GET** `/api/averages/:year/:month`
+
+**Description:** Get monthly average of present students and attendance percentage for each standard and for the whole school. Registered students count is taken from the last attendance entry of the month for each class.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**URL Parameters:**
+- `year`: Year (e.g., 2026)
+- `month`: Month (1-12)
+
+**Example:** `/api/averages/2026/1`
+
+**Response (200):**
+```json
+{
+  "year": 2026,
+  "month": 1,
+  "standards": {
+    "0": {
+      "averageMale": 12.5,
+      "averageFemale": 10.2,
+      "averageTotal": 22.7,
+      "registeredMale": 15,
+      "registeredFemale": 13,
+      "registeredTotal": 28,
+      "percentMale": 83.33,
+      "percentFemale": 78.46,
+      "percentTotal": 81.07,
+      "workingDays": 20
+    },
+    "1": {
+      "averageMale": 18.1,
+      "averageFemale": 17.2,
+      "averageTotal": 35.3,
+      "registeredMale": 20,
+      "registeredFemale": 19,
+      "registeredTotal": 39,
+      "percentMale": 90.5,
+      "percentFemale": 90.53,
+      "percentTotal": 90.51,
+      "workingDays": 20
+    }
+    // ... more standards
+  },
+  "schoolAverage": {
+    "averageMale": 15.3,
+    "averageFemale": 13.7,
+    "averageTotal": 29.0,
+    "registeredMale": 35,
+    "registeredFemale": 32,
+    "registeredTotal": 67,
+    "percentMale": 87.14,
+    "percentFemale": 85.62,
+    "percentTotal": 86.38,
+    "workingDays": 40
+  }
+}
+```
+
+**Field Descriptions:**
+- `averageMale`, `averageFemale`, `averageTotal`: Monthly average present students (per working day)
+- `registeredMale`, `registeredFemale`, `registeredTotal`: Registered students count (from last attendance entry of the month)
+- `percentMale`, `percentFemale`, `percentTotal`: Percentage of present students (average/registered * 100)
+- `workingDays`: Total attendance entries (sum of all divisions for the standard)
+
+**Notes:**
+- Balvatika is standard 0.
+- Divisions are combined for each standard.
+- School average is the sum across all standards.
 ### 14. Create Attendance
 **POST** `/api/attendance`
 
