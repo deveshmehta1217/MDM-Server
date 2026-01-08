@@ -14,7 +14,7 @@ import { getAttendanceStatus } from './attendanceControllers/semiMonthlyStatus.j
 import { getDailyReportDataV2 } from './attendanceControllers/dailyReportCombined.js';
 import { getSemiMonthlyReportV2 } from './attendanceControllers/semiMonthlyReportV2.js';
 import { getDailyReportRangeV2 } from './attendanceControllers/dailyReportRangeV2.js';
-
+import { getDailyReportDataV3 } from './attendanceControllers/dailyReportCombinedV3.js';
 export { 
     getDailyReport,
     getSemiMonthlyReport,
@@ -27,6 +27,7 @@ export {
     getDailyAttendanceStatus,
     getAttendanceStatus,
     getDailyReportDataV2,
+    getDailyReportDataV3,
     getSemiMonthlyReportV2,
     getDailyReportRangeV2
 };
