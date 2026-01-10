@@ -21,7 +21,7 @@ export const getSemiMonthlyReportV2 = async (req, res) => {
                 name: 'બાલવાટિકા',
                 worksheetName: 'બાલવાટિકા',
                 stdName: 'બાલવાટિકા',
-                filter: { standard: 0, division: 'A' }
+                filter: { standard: 0 }
             },
             {
                 name: 'ધોરણ ૧ થી ૫',
