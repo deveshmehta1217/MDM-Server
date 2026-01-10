@@ -148,10 +148,16 @@ export const getDailyReportDataV3 = async (req, res) => {
             updateTotals(rowData.slice(45, 54), grandTotal.slice(45));
         });
 
-        // Helper to build subtotal row
+        // Helper to build subtotal row with correct percentage calculation
         const buildSubtotalRow = (label, totalsArr) => {
             // label + 44 values + 9 percentages
-            return [label, ...totalsArr.slice(0, 44), ...totalsArr.slice(44, 53), totalsArr[53]];
+            // Calculate percentages using summed totals
+            const reg = totalsArr.slice(0, 11);
+            const pres = totalsArr.slice(11, 22);
+            const mdm = totalsArr.slice(22, 33);
+            const alp = totalsArr.slice(33, 44);
+            const percentages = calculatePercentages(reg, pres, mdm, alp);
+            return [label, ...totalsArr.slice(0, 44), ...percentages];
         };
 
         // Build sheet
