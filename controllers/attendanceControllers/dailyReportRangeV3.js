@@ -37,7 +37,7 @@ export const getDailyReportRangeV3 = async (req, res) => {
             dailyReports.push({
                 ...dateData,
                 dateISO: dateStr,
-                hasData: dateData?.data?.length > 0
+                hasData: dateData?.records?.length > 0
             });
         }
 
