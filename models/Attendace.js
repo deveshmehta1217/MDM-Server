@@ -28,7 +28,19 @@ const AttendanceSchema = new mongoose.Schema({
         default: Date.now
     },
     registeredStudents: {
-        general: {
+        sc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        st: {
             male: {
                 type: Number,
                 required: true,
@@ -52,19 +64,7 @@ const AttendanceSchema = new mongoose.Schema({
                 default: 0
             },
         },
-        sc: {
-            male: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-            female: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-        },
-        st: {
+        general: {
             male: {
                 type: Number,
                 required: true,
@@ -78,7 +78,19 @@ const AttendanceSchema = new mongoose.Schema({
         },
     },
     presentStudents: {
-        general: {
+        sc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        st: {
             male: {
                 type: Number,
                 required: true,
@@ -102,19 +114,7 @@ const AttendanceSchema = new mongoose.Schema({
                 default: 0
             },
         },
-        sc: {
-            male: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-            female: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-        },
-        st: {
+        general: {
             male: {
                 type: Number,
                 required: true,
@@ -128,7 +128,19 @@ const AttendanceSchema = new mongoose.Schema({
         },
     },
     mealTakenStudents: {
-        general: {
+        sc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        st: {
             male: {
                 type: Number,
                 required: true,
@@ -152,19 +164,7 @@ const AttendanceSchema = new mongoose.Schema({
                 default: 0
             },
         },
-        sc: {
-            male: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-            female: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-        },
-        st: {
+        general: {
             male: {
                 type: Number,
                 required: true,
@@ -178,7 +178,19 @@ const AttendanceSchema = new mongoose.Schema({
         },
     },
     alpaharTakenStudents: {
-        general: {
+        sc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        st: {
             male: {
                 type: Number,
                 required: true,
@@ -202,19 +214,7 @@ const AttendanceSchema = new mongoose.Schema({
                 default: 0
             },
         },
-        sc: {
-            male: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-            female: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-        },
-        st: {
+        general: {
             male: {
                 type: Number,
                 required: true,

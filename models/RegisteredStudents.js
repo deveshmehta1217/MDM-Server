@@ -5,7 +5,7 @@ const RegisteredStudentSchema = new mongoose.Schema({
         type: String,
         required: true,
         validate: {
-            validator: function(v) {
+            validator: function (v) {
                 return /^[0-9]{11}$/.test(v);
             },
             message: 'School ID must be exactly 11 digits'
@@ -33,7 +33,19 @@ const RegisteredStudentSchema = new mongoose.Schema({
         }
     },
     counts: {
-        general: {
+        sc: {
+            male: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+            female: {
+                type: Number,
+                required: true,
+                default: 0
+            },
+        },
+        st: {
             male: {
                 type: Number,
                 required: true,
@@ -57,19 +69,7 @@ const RegisteredStudentSchema = new mongoose.Schema({
                 default: 0
             },
         },
-        sc: {
-            male: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-            female: {
-                type: Number,
-                required: true,
-                default: 0
-            },
-        },
-        st: {
+        general: {
             male: {
                 type: Number,
                 required: true,
